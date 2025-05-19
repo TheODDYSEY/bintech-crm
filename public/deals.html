@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Deals - Bintech CRM</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 220px;
+      height: 100vh;
+      background-color: var(--primary);
+      color: white;
+      padding: 20px;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    .main-content {
+      margin-left: 220px;
+      width: calc(100% - 220px);
+      padding: 20px;
+    }
+
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 22px;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      margin: 20px 0;
+    }
+
+    .sidebar ul li a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+    }
+
+    .sidebar ul li a.active,
+    .sidebar ul li a:hover {
+      text-decoration: underline;
+    }
+
+    .stage-tag {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 14px;
+      color: white;
+      display: inline-block;
+    }
+
+    .Negotiation {
+      background-color: #370b9e;
+    }
+
+    .Proposal {
+      background-color: #17a2b8;
+    }
+
+    .Closed\ Won {
+      background-color: #28a745;
+    }
+
+    .Closed\ Lost {
+      background-color: #dc3545;
+    }
+
+    .action-buttons button {
+      margin-right: 6px;
+      padding: 4px 8px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .edit-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    select {
+      padding: 8px;
+      font-size: 16px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>📊 CRM</h2>
+    <ul>
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="leads.html">Leads</a></li>
+      <li><a class="active" href="deals.html">Deals</a></li>
+      <li><a href="contacts.html">Contacts</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Top Navbar -->
+    <nav class="navbar">
+      <div class="nav-brand">🔹 Bintech CRM</div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="leads.html">Leads</a></li>
+        <li><a href="deals.html">Deals</a></li>
+        <li><a href="contacts.html">Contacts</a></li>
+      </ul>
+      <button class="dark-toggle" onclick="document.body.classList.toggle('dark-mode')">🌙</button>
+    </nav>
+
+    <div class="container">
+      <h1>Deals</h1>
+
+      <form id="dealForm">
+        <input type="text" id="dealName" placeholder="Deal Name" required />
+        <input type="number" id="dealAmount" placeholder="Amount (Ksh)" required />
+        <select id="dealStage" required>
+          <option value="">Select Stage</option>
+          <option value="Negotiation">Negotiation</option>
+          <option value="Proposal">Proposal</option>
+          <option value="Closed Won">Closed Won</option>
+          <option value="Closed Lost">Closed Lost</option>
+        </select>
+        <input type="text" id="dealCustomer" placeholder="Customer Name" required />
+        <button type="submit">Add Deal</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Deal</th>
+            <th>Amount</th>
+            <th>Stage</th>
+            <th>Customer</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="dealTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const dealForm = document.getElementById("dealForm");
+    const dealTableBody = document.getElementById("dealTableBody");
+
+    let deals = JSON.parse(localStorage.getItem("deals")) || [];
+
+    function renderDeals() {
+      dealTableBody.innerHTML = "";
+      deals.forEach((deal, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${deal.name}</td>
+          <td>${deal.amount}</td>
+          <td><span class="stage-tag ${deal.stage.replace(/\s/g, '\\ ')}">${deal.stage}</span></td>
+          <td>${deal.customer}</td>
+          <td class="action-buttons">
+            <button class="edit-btn" data-index="${index}">Edit</button>
+            <button class="delete-btn" data-index="${index}">Delete</button>
+          </td>
+        `;
+        dealTableBody.appendChild(row);
+      });
+      addRowEvents();
+    }
+
+    function saveDeals() {
+      localStorage.setItem("deals", JSON.stringify(deals));
+    }
+
+    dealForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const name = document.getElementById("dealName").value.trim();
+      const amount = document.getElementById("dealAmount").value.trim();
+      const stage = document.getElementById("dealStage").value.trim();
+      const customer = document.getElementById("dealCustomer").value.trim();
+
+      deals.push({ name, amount, stage, customer });
+      saveDeals();
+      renderDeals();
+      dealForm.reset();
+    });
+
+    function addRowEvents() {
+      document.querySelectorAll(".edit-btn").forEach(button => {
+        button.addEventListener("click", () => {
+          const index = button.getAttribute("data-index");
+          const deal = deals[index];
+
+          document.getElementById("dealName").value = deal.name;
+          document.getElementById("dealAmount").value = deal.amount;
+          document.getElementById("dealStage").value = deal.stage;
+          document.getElementById("dealCustomer").value = deal.customer;
+
+          deals.splice(index, 1);
+          saveDeals();
+          renderDeals();
+        });
+      });
+
+      document.querySelectorAll(".delete-btn").forEach(button => {
+        button.addEventListener("click", () => {
+          const index = button.getAttribute("data-index");
+          deals.splice(index, 1);
+          saveDeals();
+          renderDeals();
+        });
+      });
+    }
+
+    renderDeals();
+  </script>
+</body>
+</html>

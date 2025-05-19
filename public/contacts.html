@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Contacts - Bintech CRM</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script>
+  if (localStorage.getItem("isLoggedIn") !== "true") {
+    window.location.href = "login.html";
+  }
+</script>
+
+  <style>
+    body {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 220px;
+      background-color: var(--primary, #2c3e50);
+      color: white;
+      padding: 20px;
+      flex-shrink: 0;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+    .main-content {
+      margin-left: 220px;
+      width: calc(100% - 220px);
+      padding: 20px;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 22px;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    .sidebar ul li {
+      margin: 20px 0;
+    }
+    .sidebar ul li a {
+      color: white;
+      text-decoration: none;
+      font-size: 16px;
+    }
+    .sidebar ul li a.active,
+    .sidebar ul li a:hover {
+      text-decoration: underline;
+    }
+    .btn {
+      padding: 4px 8px;
+      margin: 0 2px;
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      cursor: pointer;
+    }
+    .edit-btn {
+      background-color: #3498db;
+    }
+    .delete-btn {
+      background-color: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>📊 CRM</h2>
+    <ul>
+      <li><a href="index.html">Dashboard</a></li>
+      <li><a href="leads.html">Leads</a></li>
+      <li><a href="deals.html">Deals</a></li>
+      <li><a class="active" href="contacts.html">Contacts</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <nav class="navbar">
+      <div class="nav-brand">🔹 Bintech CRM</div>
+      <ul class="nav-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="leads.html">Leads</a></li>
+        <li><a href="deals.html">Deals</a></li>
+        <li><a href="contacts.html">Contacts</a></li>
+      </ul>
+      <button class="dark-toggle" onclick="document.body.classList.toggle('dark-mode')">🌙</button>
+    </nav>
+
+    <div class="container">
+      <h1>Contacts</h1>
+
+      <!-- Add Contact Form -->
+      <form id="contactForm">
+        <input type="text" id="contactName" placeholder="Full Name" required />
+        <input type="email" id="contactEmail" placeholder="Email Address" required />
+        <input type="text" id="contactPhone" placeholder="Phone Number" required />
+        <input type="text" id="contactCompany" placeholder="Company" required />
+        <button type="submit">Add Contact</button>
+      </form>
+
+      <!-- Import CSV Form -->
+      <form id="importForm" enctype="multipart/form-data" style="margin-top: 20px;">
+        <input type="file" name="file" accept=".csv" required />
+        <button type="submit">Import Contacts (CSV)</button>
+      </form>
+
+      <!-- Export CSV Button -->
+      <button id="exportBtn" style="margin-top: 10px;">Export Contacts (CSV)</button>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Company</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="contactTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const contactForm = document.getElementById("contactForm");
+    const contactTableBody = document.getElementById("contactTableBody");
+    const importForm = document.getElementById("importForm");
+    const exportBtn = document.getElementById("exportBtn");
+
+    let editRow = null;
+
+    function createActionsCell(contact, row) {
+      const cell = document.createElement("td");
+
+      const editBtn = document.createElement("button");
+      editBtn.textContent = "Edit";
+      editBtn.className = "btn edit-btn";
+      editBtn.onclick = () => {
+        const cells = row.children;
+        document.getElementById("contactName").value = cells[0].textContent;
+        document.getElementById("contactEmail").value = cells[1].textContent;
+        document.getElementById("contactPhone").value = cells[2].textContent;
+        document.getElementById("contactCompany").value = cells[3].textContent;
+        editRow = row;
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "Delete";
+      deleteBtn.className = "btn delete-btn";
+      deleteBtn.onclick = () => {
+        if (confirm("Are you sure you want to delete this contact?")) {
+          fetch(`/api/contacts/${encodeURIComponent(contact.phone)}`, {
+            method: 'DELETE',
+          })
+            .then(res => res.json())
+            .then(result => {
+              if (result.success) {
+                if (editRow === row) editRow = null;
+                row.remove();
+              } else {
+                alert("❌ Failed to delete contact.");
+              }
+            })
+            .catch(err => {
+              console.error("Error deleting contact:", err);
+              alert("❌ An error occurred while deleting.");
+            });
+        }
+      };
+
+      cell.appendChild(editBtn);
+      cell.appendChild(deleteBtn);
+      return cell;
+    }
+
+    // Load contacts from server
+    fetch('/api/contacts')
+      .then(res => res.json())
+      .then(contacts => {
+        contactTableBody.innerHTML = '';
+        contacts.forEach(contact => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${contact.name}</td>
+            <td>${contact.email}</td>
+            <td>${contact.phone}</td>
+            <td>${contact.company}</td>
+          `;
+          row.appendChild(createActionsCell(contact, row));
+          contactTableBody.appendChild(row);
+        });
+      })
+      .catch(err => console.error('Error loading contacts:', err));
+
+    // Handle Add/Edit form submission
+    contactForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const name = document.getElementById("contactName").value.trim();
+      const email = document.getElementById("contactEmail").value.trim();
+      const phone = document.getElementById("contactPhone").value.trim();
+      const company = document.getElementById("contactCompany").value.trim();
+
+      const newContact = { name, email, phone, company };
+
+      if (editRow) {
+        const cells = editRow.children;
+        cells[0].textContent = name;
+        cells[1].textContent = email;
+        cells[2].textContent = phone;
+        cells[3].textContent = company;
+        editRow = null;
+        contactForm.reset();
+      } else {
+        fetch('/api/contacts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newContact)
+        })
+          .then(res => res.json())
+          .then(result => {
+            if (result.success) {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${name}</td>
+                <td>${email}</td>
+                <td>${phone}</td>
+                <td>${company}</td>
+              `;
+              row.appendChild(createActionsCell(newContact, row));
+              contactTableBody.appendChild(row);
+              contactForm.reset();
+            } else {
+              alert("❌ Failed to save contact.");
+            }
+          })
+          .catch(err => {
+            console.error("Error saving contact:", err);
+            alert("❌ An error occurred while saving.");
+          });
+      }
+    });
+
+    importForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(importForm);
+
+      try {
+        const res = await fetch("/api/import-contacts", {
+          method: "POST",
+          body: formData
+        });
+        const result = await res.json();
+
+        if (result.success) {
+          alert(`${result.imported} contacts imported successfully!`);
+          location.reload();
+        } else {
+          alert("❌ Import failed.");
+        }
+      } catch (error) {
+        console.error("Error importing contacts:", error);
+        alert("❌ An error occurred during import.");
+      }
+    });
+
+    exportBtn.addEventListener("click", () => {
+      window.location.href = "/api/export-contacts";
+    });
+  </script>
+
+</body>
+</html>
