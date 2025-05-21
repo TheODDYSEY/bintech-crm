@@ -2,112 +2,263 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Deals - Bintech CRM</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="styles.css"/>
   <style>
-    body {
-      display: flex;
-      min-height: 100vh;
-    }
+  :root {
+    --primary: #2c3e50;
+    --accent: #3498db;
+    --light-gray: #ecf0f1;
+    --success: #28a745;
+    --danger: #dc3545;
+    --info: #17a2b8;
+    --warning: #f39c12;
+  }
 
-    .sidebar {
-      width: 220px;
-      height: 100vh;
-      background-color: var(--primary);
-      color: white;
-      padding: 20px;
-      flex-shrink: 0;
-      position: fixed;
-      top: 0;
-      left: 0;
+  body {
+    display: flex;
+    min-height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f6fc;
+  }
+
+  .sidebar {
+    width: 220px;
+    background-color: var(--primary);
+    color: white;
+    padding: 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+  }
+
+  .main-content {
+    margin-left: 220px;
+    padding: 20px 40px;
+    width: calc(100% - 220px);
+    background-color: #f9f9f9;
+  }
+
+  .sidebar h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 22px;
+  }
+
+  .sidebar ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .sidebar ul li {
+    margin: 20px 0;
+  }
+
+  .sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+  }
+
+  .sidebar ul li a.active,
+  .sidebar ul li a:hover {
+    text-decoration: underline;
+    color: var(--accent);
+  }
+
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--accent);
+    padding: 10px 20px;
+    color: white;
+    border-radius: 6px;
+    margin-bottom: 20px;
+  }
+
+  .navbar .nav-links {
+    display: flex;
+    gap: 15px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .navbar a {
+    color: white;
+    text-decoration: none;
+  }
+
+  .navbar .dark-toggle {
+    background: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  h1 {
+    margin-bottom: 10px;
+    color: #0a66c2;
+  }
+
+  #dealContainer {
+    background-color: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+    max-width: 100%;
+  }
+
+  form h2 {
+    margin-bottom: 15px;
+    color: var(--primary);
+  }
+
+  .form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .form-group label {
+    font-weight: bold;
+    margin-bottom: 6px;
+    color: #2c3e50;
+  }
+
+  form input,
+  form select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  form button {
+    background-color: var(--accent);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+  }
+
+  form button:hover {
+    background-color: #2874b0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  table thead {
+    background-color: var(--primary);
+    color: white;
+  }
+table th {
+      background-color: #e8f0fe;
+      color: #0a66c2;
+    }
+  table td {
+    padding: 12px 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .stage-tag {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    color: white;
+    display: inline-block;
+  }
+
+  .Negotiation {
+    background-color: #370b9e;
+  }
+
+  .Proposal {
+    background-color: var(--info);
+  }
+
+  .Closed\ Won {
+    background-color: var(--success);
+  }
+
+  .Closed\ Lost {
+    background-color: var(--danger);
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+
+  .action-buttons button {
+    padding: 6px 12px;
+    font-size: 13px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+  }
+
+  .edit-btn {
+    background-color: var(--accent);
+    color: white;
+  }
+
+  .edit-btn:hover {
+    opacity: 0.85;
+  }
+
+  .delete-btn {
+    background-color: var(--danger);
+    color: white;
+  }
+
+  .delete-btn:hover {
+    opacity: 0.85;
+  }
+
+  /* Responsive Enhancement */
+  @media screen and (max-width: 768px) {
+    .form-row {
+      flex-direction: column;
     }
 
     .main-content {
-      margin-left: 220px;
-      width: calc(100% - 220px);
       padding: 20px;
     }
+  }
+</style>
 
-    .sidebar h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 22px;
-    }
-
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    .sidebar ul li {
-      margin: 20px 0;
-    }
-
-    .sidebar ul li a {
-      color: white;
-      text-decoration: none;
-      font-size: 16px;
-    }
-
-    .sidebar ul li a.active,
-    .sidebar ul li a:hover {
-      text-decoration: underline;
-    }
-
-    .stage-tag {
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 14px;
-      color: white;
-      display: inline-block;
-    }
-
-    .Negotiation {
-      background-color: #370b9e;
-    }
-
-    .Proposal {
-      background-color: #17a2b8;
-    }
-
-    .Closed\ Won {
-      background-color: #28a745;
-    }
-
-    .Closed\ Lost {
-      background-color: #dc3545;
-    }
-
-    .action-buttons button {
-      margin-right: 6px;
-      padding: 4px 8px;
-      font-size: 14px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .edit-btn {
-      background-color: #007bff;
-      color: white;
-    }
-
-    .delete-btn {
-      background-color: #dc3545;
-      color: white;
-    }
-
-    select {
-      padding: 8px;
-      font-size: 16px;
-      margin-bottom: 10px;
-      width: 100%;
-    }
-  </style>
 </head>
 <body>
-
-  <!-- Sidebar -->
   <div class="sidebar">
     <h2>📊 CRM</h2>
     <ul>
@@ -118,9 +269,7 @@
     </ul>
   </div>
 
-  <!-- Main Content -->
   <div class="main-content">
-    <!-- Top Navbar -->
     <nav class="navbar">
       <div class="nav-brand">🔹 Bintech CRM</div>
       <ul class="nav-links">
@@ -132,30 +281,105 @@
       <button class="dark-toggle" onclick="document.body.classList.toggle('dark-mode')">🌙</button>
     </nav>
 
-    <div class="container">
-      <h1>Deals</h1>
+    <h1>Deals</h1>
+    <div id="customerDetails" style="margin-bottom: 20px; font-weight: bold;"></div>
 
+    <div id="dealContainer">
       <form id="dealForm">
-        <input type="text" id="dealName" placeholder="Deal Name" required />
-        <input type="number" id="dealAmount" placeholder="Amount (Ksh)" required />
-        <select id="dealStage" required>
-          <option value="">Select Stage</option>
-          <option value="Negotiation">Negotiation</option>
-          <option value="Proposal">Proposal</option>
-          <option value="Closed Won">Closed Won</option>
-          <option value="Closed Lost">Closed Lost</option>
-        </select>
-        <input type="text" id="dealCustomer" placeholder="Customer Name" required />
-        <button type="submit">Add Deal</button>
-      </form>
+  <h2>Add a New Deal</h2>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="dealName">Deal Name</label>
+      <input type="text" id="dealName" placeholder="Deal Name" required />
+    </div>
+    <div class="form-group">
+      <label for="dealAmount">Amount (Ksh)</label>
+      <input type="number" id="dealAmount" placeholder="Amount (Ksh)" required />
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="dealStage">Deal Stage</label>
+      <select id="dealStage" required>
+        <option value="">Select Stage</option>
+        <option value="Negotiation">Negotiation</option>
+        <option value="Proposal">Proposal</option>
+        <option value="Closed Won">Closed Won</option>
+        <option value="Closed Lost">Closed Lost</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="customerNumberInput">Customer Number</label>
+      <input type="text" id="customerNumberInput" name="customerNumber" />
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="customerNameInput">Customer Name</label>
+      <input type="text" id="customerNameInput" name="customerName" />
+    </div>
+    <div class="form-group">
+      <label for="companyNameInput">Company Name</label>
+      <input type="text" id="companyNameInput" name="company" />
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="emailInput">Email</label>
+      <input type="email" id="emailInput" name="email" />
+    </div>
+    <div class="form-group">
+      <label for="phoneInput">Phone</label>
+      <input type="tel" id="phoneInput" name="phone" />
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="sourceInput">Source</label>
+      <input type="text" id="sourceInput" name="source" />
+    </div>
+    <div class="form-group">
+      <label for="productInput">Product</label>
+      <input type="text" id="productInput" name="product" />
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="brandInput">Brand</label>
+      <input type="text" id="brandInput" name="brand" />
+    </div>
+    <div class="form-group">
+      <label for="inquiryDateInput">Inquiry Date</label>
+      <input type="date" id="inquiryDateInput" name="inquiryDate" />
+    </div>
+  </div>
+
+  <div style="text-align: right; margin-top: 20px;">
+    <button type="submit">➕ Add Deal</button>
+  </div>
+</form>
 
       <table>
         <thead>
           <tr>
             <th>Deal</th>
+            <th>Customer Number</th>
             <th>Amount</th>
             <th>Stage</th>
             <th>Customer</th>
+            <th>Company</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Source</th>
+            <th>Product</th>
+            <th>Brand</th>
+            <th>Inquiry Date</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -165,76 +389,146 @@
   </div>
 
   <script>
-    const dealForm = document.getElementById("dealForm");
-    const dealTableBody = document.getElementById("dealTableBody");
+  const dealForm = document.getElementById("dealForm");
+  const dealTableBody = document.getElementById("dealTableBody");
+  let deals = JSON.parse(localStorage.getItem("deals")) || [];
+  let editingIndex = -1;
 
-    let deals = JSON.parse(localStorage.getItem("deals")) || [];
+  function renderDeals() {
+    dealTableBody.innerHTML = "";
+    deals.forEach((deal, index) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${deal.name}</td>
+        <td>${deal.customerNumber}</td>
+        <td>${deal.amount}</td>
+        <td><span class="stage-tag ${deal.stage.replace(/\s/g, '\\ ')}">${deal.stage}</span></td>
 
-    function renderDeals() {
-      dealTableBody.innerHTML = "";
-      deals.forEach((deal, index) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${deal.name}</td>
-          <td>${deal.amount}</td>
-          <td><span class="stage-tag ${deal.stage.replace(/\s/g, '\\ ')}">${deal.stage}</span></td>
-          <td>${deal.customer}</td>
-          <td class="action-buttons">
-            <button class="edit-btn" data-index="${index}">Edit</button>
-            <button class="delete-btn" data-index="${index}">Delete</button>
-          </td>
-        `;
-        dealTableBody.appendChild(row);
+        <td>${deal.customer}</td>
+        <td>${deal.company}</td>
+        <td>${deal.email}</td>
+        <td>${deal.phone}</td>
+        <td>${deal.source}</td>
+        <td>${deal.product}</td>
+        <td>${deal.brand}</td>
+        <td>${deal.inquiryDate}</td>
+        <td class="action-buttons">
+          <button class="edit-btn" data-index="${index}">Edit</button>
+          <button class="delete-btn" data-index="${index}">Delete</button>
+        </td>
+      `;
+      dealTableBody.appendChild(row);
+    });
+    addRowEvents();
+  }
+
+  function saveDeals() {
+    localStorage.setItem("deals", JSON.stringify(deals));
+  }
+
+  dealForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const name = document.getElementById("dealName").value.trim();
+    const amount = document.getElementById("dealAmount").value.trim();
+    const stage = document.getElementById("dealStage").value.trim();
+    const customerNumber = document.getElementById("customerNumberInput").value.trim();
+    const customer = document.getElementById("customerNameInput").value.trim();
+    const company = document.getElementById("companyNameInput").value.trim();
+    const email = document.getElementById("emailInput").value.trim();
+    const phone = document.getElementById("phoneInput").value.trim();
+    const source = document.getElementById("sourceInput").value.trim();
+    const product = document.getElementById("productInput").value.trim();
+    const brand = document.getElementById("brandInput").value.trim();
+    const inquiryDate = document.getElementById("inquiryDateInput").value;
+
+    const dealData = {
+      name, amount, stage, customerNumber,
+      customer, company, email, phone,
+      source, product, brand, inquiryDate
+    };
+
+    if (editingIndex >= 0) {
+      // Update existing
+      deals[editingIndex] = dealData;
+      editingIndex = -1;
+    } else {
+      // Add new
+      deals.push(dealData);
+    }
+
+    saveDeals();
+    renderDeals();
+    dealForm.reset();
+  });
+
+  function addRowEvents() {
+    document.querySelectorAll(".edit-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        const index = parseInt(button.getAttribute("data-index"));
+        const deal = deals[index];
+        document.getElementById("dealName").value = deal.name;
+        document.getElementById("dealAmount").value = deal.amount;
+        document.getElementById("dealStage").value = deal.stage;
+        document.getElementById("customerNumberInput").value = deal.customerNumber;
+        document.getElementById("customerNameInput").value = deal.customer;
+        document.getElementById("companyNameInput").value = deal.company;
+        document.getElementById("emailInput").value = deal.email;
+        document.getElementById("phoneInput").value = deal.phone;
+        document.getElementById("sourceInput").value = deal.source;
+        document.getElementById("productInput").value = deal.product;
+        document.getElementById("brandInput").value = deal.brand;
+        document.getElementById("inquiryDateInput").value = deal.inquiryDate;
+
+        editingIndex = index;
       });
-      addRowEvents();
-    }
-
-    function saveDeals() {
-      localStorage.setItem("deals", JSON.stringify(deals));
-    }
-
-    dealForm.addEventListener("submit", function (e) {
-      e.preventDefault();
-
-      const name = document.getElementById("dealName").value.trim();
-      const amount = document.getElementById("dealAmount").value.trim();
-      const stage = document.getElementById("dealStage").value.trim();
-      const customer = document.getElementById("dealCustomer").value.trim();
-
-      deals.push({ name, amount, stage, customer });
-      saveDeals();
-      renderDeals();
-      dealForm.reset();
     });
 
-    function addRowEvents() {
-      document.querySelectorAll(".edit-btn").forEach(button => {
-        button.addEventListener("click", () => {
-          const index = button.getAttribute("data-index");
-          const deal = deals[index];
-
-          document.getElementById("dealName").value = deal.name;
-          document.getElementById("dealAmount").value = deal.amount;
-          document.getElementById("dealStage").value = deal.stage;
-          document.getElementById("dealCustomer").value = deal.customer;
-
+    document.querySelectorAll(".delete-btn").forEach(button => {
+      button.addEventListener("click", () => {
+        const index = parseInt(button.getAttribute("data-index"));
+        if (confirm("Are you sure you want to delete this deal?")) {
           deals.splice(index, 1);
           saveDeals();
           renderDeals();
-        });
+        }
       });
+    });
+  }
 
-      document.querySelectorAll(".delete-btn").forEach(button => {
-        button.addEventListener("click", () => {
-          const index = button.getAttribute("data-index");
-          deals.splice(index, 1);
-          saveDeals();
-          renderDeals();
-        });
-      });
+  window.onload = function () {
+    // Autofill from URL params
+    const params = new URLSearchParams(window.location.search);
+    const fields = {
+      customerNumberInput: "number",
+      customerNameInput: "name",
+      companyNameInput: "company",
+      emailInput: "email",
+      phoneInput: "phone",
+      sourceInput: "source",
+      productInput: "product",
+      brandInput: "brand",
+      inquiryDateInput: "inquiryDate"
+    };
+
+    for (const [inputId, paramName] of Object.entries(fields)) {
+      const value = params.get(paramName);
+      if (value) {
+        const input = document.getElementById(inputId);
+        if (input) input.value = decodeURIComponent(value);
+      }
+    }
+
+    const customerName = params.get("name");
+    const customerNumber = params.get("number");
+
+    if (customerName && customerNumber) {
+      document.getElementById("customerDetails").innerHTML =
+        `Selected Lead: <strong>${customerName}</strong> (Customer #${customerNumber})`;
     }
 
     renderDeals();
-  </script>
+  };
+</script>
 </body>
 </html>

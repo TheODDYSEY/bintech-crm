@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="styles.css" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --primary: #3b82f6;
+      --secondary: #9333ea;
+      --success: #10b981;
+      --danger: #ef4444;
+      --text: #1e293b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      color: #64748b;
+    }
+
+    .card p {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-top: 0.5rem;
+    }
+
+    .card.total-leads { border-left: 5px solid var(--primary); }
+    .card.total-contacts { border-left: 5px solid var(--secondary); }
+    .card.total-deals { border-left: 5px solid var(--success); }
+    .card.conversion-rate { border-left: 5px solid var(--danger); }
+
+    .section-title {
+      font-size: 1.2rem;
+      margin: 2rem 0 1rem;
+      color: var(--text);
+    }
+
+    canvas {
+      background: white;
+      padding: 1rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .recent-activity {
+      background: white;
+      padding: 1rem;
+      border-radius: 1rem;
+      max-height: 250px;
+      overflow-y: auto;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    }
+
+    .recent-activity li {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .recent-activity li:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 CRM Dashboard</h1>
+
+    <!-- Summary Cards -->
+    <div class="cards">
+      <div class="card total-leads">
+        <h2>Total Leads</h2>
+        <p id="totalLeads">0</p>
+      </div>
+      <div class="card total-contacts">
+        <h2>Total Contacts</h2>
+        <p id="totalContacts">0</p>
+      </div>
+      <div class="card total-deals">
+        <h2>Total Deals</h2>
+        <p id="totalDeals">0</p>
+      </div>
+      <div class="card conversion-rate">
+        <h2>Conversion Rate</h2>
+        <p id="conversionRate">0%</p>
+      </div>
+    </div>
+
+    <!-- Deals Chart -->
+    <div>
+      <h2 class="section-title">📈 Deals Won vs Lost</h2>
+      <canvas id="dealsChart" height="100"></canvas>
+    </div>
+
+    <!-- Recent Activity -->
+    <div>
+      <h2 class="section-title">🕓 Recent Activity</h2>
+      <ul id="recentActivity" class="recent-activity"></ul>
+    </div>
+  </div>
+
+  <script>
+    async function loadDashboard() {
+      const [leadsRes, contactsRes, dealsRes] = await Promise.all([
+        fetch('/api/leads'),
+        fetch('/api/contacts'),
+        fetch('/api/deals'),
+      ]);
+
+      const leads = await leadsRes.json();
+      const contacts = await contactsRes.json();
+      const deals = await dealsRes.json();
+
+      document.getElementById('totalLeads').innerText = leads.length;
+      document.getElementById('totalContacts').innerText = contacts.length;
+      document.getElementById('totalDeals').innerText = deals.length;
+
+      const wonDeals = deals.filter(d => d.status?.toLowerCase() === 'won').length;
+      const conversionRate = leads.length > 0 ? ((wonDeals / leads.length) * 100).toFixed(2) : 0;
+      document.getElementById('conversionRate').innerText = `${conversionRate}%`;
+
+      const lostDeals = deals.filter(d => d.status?.toLowerCase() === 'lost').length;
+
+      // Chart.js - Deals
+      new Chart(document.getElementById('dealsChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Won Deals', 'Lost Deals'],
+    datasets: [{
+      label: 'Deals',
+      data: [wonDeals, lostDeals],
+      backgroundColor: ['#10b981', '#ef4444'],
+      borderColor: ['#047857', '#b91c1c'],
+      borderWidth: 2,
+      borderRadius: 10,
+      barThickness: 60,
+      hoverBackgroundColor: ['#059669', '#dc2626'],
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        enabled: true,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 14
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          font: {
+            size: 16,
+            weight: 'bold'
+          },
+          color: '#1e293b'
+        }
+      },
+      y: {
+        ticks: {
+          stepSize: 1,
+          font: {
+            size: 14,
+            weight: 'bold'
+          },
+          color: '#1e293b'
+        }
+      }
+    }
+  }
+});
+
+    }
+    loadDashboard();
+  </script>
+</body>
+</html>

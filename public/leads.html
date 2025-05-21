@@ -2,298 +2,427 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Leads – Bintech CRM</title>
-  <link rel="stylesheet" href="styles.css" />
-  <script>
-  if (localStorage.getItem("isLoggedIn") !== "true") {
-    window.location.href = "login.html";
-  }
-</script>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Leads - Bintech CRM</title>
   <style>
-    .btn {
-      padding: 4px 8px;
-      margin: 0 2px;
-      border: none;
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f0f6fc;
+    }
+
+    .container {
+      width: 90%;
+      margin: auto;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0a66c2;
+    }
+
+    form {
+      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 10px;
+      background-color: #ffffff;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+    }
+
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      color: #0a66c2;
+    }
+
+    input, select, button, textarea {
+      padding: 8px;
+      font-size: 1em;
+      width: 100%;
+      border: 1px solid #ccc;
       border-radius: 4px;
-      color: #fff;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      background-color: #0a66c2;
+      color: white;
+      border: none;
       cursor: pointer;
     }
-    .edit-btn { background-color: #3498db; }
-    .delete-btn { background-color: #e74c3c; }
-    .export-btn { background-color: #2ecc71; }
-    .import-btn { background-color: #f39c12; }
-    form input, form select { margin: 4px; }
+
+    button:hover {
+      background-color: #084a9a;
+    }
+
+    .csv-buttons {
+      margin-bottom: 15px;
+    }
+
+    .csv-buttons button {
+      margin-right: 10px;
+    }
+
+    .search-bar {
+      margin-bottom: 15px;
+      text-align: right;
+    }
+
+    .search-bar input {
+      padding: 8px;
+      width: 250px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+    }
+
+    table th, table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    table th {
+      background-color: #e8f0fe;
+      color: #0a66c2;
+    }
+
+    .actions button {
+      margin-right: 5px;
+    }
   </style>
 </head>
 <body>
+  <nav style="background-color: #0a66c2; padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center;">
+  <div style="font-size: 1.5em; font-weight: bold;">Bintech CRM</div>
+  <div>
+    <a href="leads.html" style="color: white; margin-right: 15px; text-decoration: none;">Leads</a>
+    <a href="contacts.html" style="color: white; margin-right: 15px; text-decoration: none;">Contacts</a>
+    <a href="deals.html" style="color: white; margin-right: 15px; text-decoration: none;">Deals</a>
+  
+  </div>
+</nav>
 
-  <nav class="navbar">
-    <div class="nav-brand">🔹 Bintech CRM</div>
-    <ul class="nav-links">
-      <li><a href="index.html">Dashboard</a></li>
-      <li><a href="leads.html" class="active">Leads</a></li>
-      <li><a href="deals.html">Deals</a></li>
-      <li><a href="contacts.html">Contacts</a></li>
-    </ul>
-    <button class="dark-toggle" onclick="document.body.classList.toggle('dark-mode')">🌙</button>
-  </nav>
+  <div class="container">
+    <h1>Leads</h1>
 
-  <div class="layout">
-    <aside class="sidebar">
-      <ul>
-        <li><a href="leads.html" class="active">Leads</a></li>
-        <li><a href="deals.html">Deals</a></li>
-        <li><a href="contacts.html">Contacts</a></li>
-      </ul>
-    </aside>
+    <div class="csv-buttons">
+      <input type="file" id="csvFile" accept=".csv" />
+      <button onclick="importCSV()">Import CSV</button>
+      <button onclick="exportCSV()">Export CSV</button>
+    </div>
 
-    <div class="container">
-      <h1>Leads</h1>
+    <div class="search-bar">
+  <input type="text" id="searchInput" placeholder="Search leads..." />
+  <button onclick="filterLeads()">Search</button>
+</div>
 
-      <form id="leadForm">
-        <input type="text" id="leadName" placeholder="Lead Name" required />
-        <input type="email" id="leadEmail" placeholder="Email" required />
-        <input type="text" id="leadPhone" placeholder="Phone" required />
-        <input type="text" id="leadStatus" placeholder="Status" required />
-        <input type="text" id="customerName" placeholder="Customer Name" required />
-        <input type="text" id="companyName" placeholder="Company Name" required />
-        <select id="productBrand" required>
-          <option value="">Select Brand</option>
+
+    <form id="leadForm">
+      <div>
+        <label for="customerNumber">Customer Number</label>
+       <input type="text" id="customerNumber" name="customerNumber" readonly />
+      </div>
+      <div>
+        <label for="name">Customer Name</label>
+        <input type="text" id="customerName" required />
+      </div>
+      <div>
+        <label for="company">Company Name</label>
+        <input type="text" id="companyName" required />
+      </div>
+      <div>
+        <label for="email">Email</label>
+        <input type="email" id="email" required />
+      </div>
+      <div>
+        <label for="phone">Phone</label>
+        <input type="text" id="phone" />
+      </div>
+      <div>
+        <label for="source">Source</label>
+       <select id="source">
+          <option value="New">New</option>
+          <option value="Existing partner">Existing Partner</option>
+          <option value="End Customer">End Customer</option>
+       </select>
+      </div>
+      <div>
+        <label for="product">Product</label>
+        <select id="product">
           <option value="Matrix">Matrix</option>
-          <option value="CPPlus">CPPlus</option>
-          <option value="Asttecs">Asttecs</option>
-          <option value="POS">POS</option>
-          <option value="Marg">Marg</option>
+          <option value="Cp-Plus">Cp-Plus</option>
+          <option value="Astecs">Astecs</option>
           <option value="Ayzo">Ayzo</option>
+          <option value="ICT">ICT</option>
+          <option value="Marg">Marg</option>
+          <option value="POS">POS</option>
         </select>
-        <select id="category" required>
-          <option value="">Select Category</option>
-          <option value="IPVS">IPVS</option>
+      </div>
+      <div>
+        <label for="category">Category</label>
+        <select id="category">
+       <option value="Cctv">Cctv</option>
           <option value="Acta">Acta</option>
           <option value="Telecom">Telecom</option>
+          <option value="Cctv installation">Cctv installation</option>
+          <option value="Telecom installation">Telecom installation</option>
+          <option value="Networking">Networking</option>
+          <option value="Marg erp">Marg erp</option>
+          <option value="Marg book">Marg book</option>
+          <option value="Pos software">Pos software</option>
         </select>
-        <input type="date" id="quotationDate" required />
-        <input type="date" id="endDate" required />
-        <button type="submit">Add Lead</button>
-      </form>
-
-      <div style="margin-top: 10px;">
-        <button class="btn export-btn" onclick="downloadCSV()">Export CSV</button>
-        <form id="importForm" enctype="multipart/form-data">
-          <input type="file" id="csvFile" name="file" accept=".csv" style="display:none;" />
-          <button class="btn import-btn" type="button" onclick="document.getElementById('csvFile').click()">Import CSV</button>
-        </form>
       </div>
+      <div>
+        <label for="status">Status</label>
+        <select id="status">
+          <option value="New">New</option>
+          <option value="Contacted">Contacted</option>
+          <option value="Qualified">Qualified</option>
+          <option value="Lost">Lost</option>
+        </select>
+      </div>
+      <div>
+        <label for="inquiryDate">Inquiry Date</label>
+        <input type="date" id="inquiryDate" />
+      </div>
+      <div>
+        <label for="dueDate">Due Date</label>
+        <input type="date" id="dueDate" />
+      </div>
+      <div>
+        <label for="followUp">Follow-Up Date</label>
+        <input type="date" id="followUp" />
+      </div>
+      
+      <div style="grid-column: span 2;">
+        <label for="remarks">Remarks</label>
+        <textarea id="remarks" rows="3"></textarea>
+      </div>
+      <div>
+        <button type="submit">Add Lead</button>
+      </div>
+    </form>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Lead Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Status</th>
-            <th>Customer</th>
-            <th>Company</th>
-            <th>Brand</th>
-            <th>Category</th>
-            <th>Quotation Date</th>
-            <th>End Date</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="leadTableBody"></tbody>
-      </table>
-    </div>
+    <table id="leadsTable">
+      <thead>
+        <tr>
+          <th>Customer Number</th>
+          <th>Customer Name</th>
+          <th>Company Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Source</th>
+          <th>Product</th>
+          <th>Brand</th>
+          <th>Status</th>
+          <th>Follow-Up</th>
+          <th>Inquiry Date</th>
+          <th>Due Date</th>
+          <th>Remarks</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 
   <script>
-    const leadForm = document.getElementById("leadForm");
-    const leadTableBody = document.getElementById("leadTableBody");
-    const csvFile = document.getElementById("csvFile");
-    let editRow = null;
-    let leads = [];
+    const leadForm = document.getElementById('leadForm');
+    const leadsTableBody = document.querySelector('#leadsTable tbody');
+    const searchInput = document.getElementById('searchInput');
 
-    function saveLeadsToStorage() {
-      localStorage.setItem("bintechLeads", JSON.stringify(leads));
+    let leads = JSON.parse(localStorage.getItem('leads')) || [];
+
+    function renderLeads(filteredLeads = leads) {
+      leadsTableBody.innerHTML = '';
+      filteredLeads.forEach((lead, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+         <td>
+  <a href="deals.html?number=${lead.customerNumber}&name=${encodeURIComponent(lead.customerName)}&company=${encodeURIComponent(lead.companyName)}&phone=${encodeURIComponent(lead.phone)}&email=${encodeURIComponent(lead.email)}&source=${encodeURIComponent(lead.source)}&brand=${encodeURIComponent(lead.category)}&product=${encodeURIComponent(lead.product)}">
+    ${lead.customerNumber}
+  </a>
+</td>
+<td>
+  <a href="deals.html?number=${lead.customerNumber}&name=${encodeURIComponent(lead.customerName)}&company=${encodeURIComponent(lead.companyName)}&phone=${encodeURIComponent(lead.phone)}&email=${encodeURIComponent(lead.email)}&source=${encodeURIComponent(lead.source)}&brand=${encodeURIComponent(lead.category)}&product=${encodeURIComponent(lead.product)}">
+    ${lead.customerName}
+  </a>
+</td>
+
+          <td>${lead.companyName}</td>
+          <td>${lead.email}</td>
+          <td>${lead.phone}</td>
+          <td>${lead.source}</td>
+          <td>${lead.product}</td>
+          <td>${lead.category}</td>
+          <td>${lead.status}</td>
+          <td>${lead.followUp}</td>
+          <td>${lead.inquiryDate}</td>
+          <td>${lead.dueDate}</td>
+          <td>${lead.remarks}</td>
+          <td class="actions">
+            <button onclick="editLead(${index})">Edit</button>
+            <button onclick="deleteLead(${index})">Delete</button>
+          </td>
+        `;
+        leadsTableBody.appendChild(row);
+      });
     }
 
-    function loadLeadsFromStorage() {
-      const stored = localStorage.getItem("bintechLeads");
-      if (stored) {
-        leads = JSON.parse(stored);
-        leads.forEach(addRowToTable);
-      }
+    function saveLeads() {
+      localStorage.setItem('leads', JSON.stringify(leads));
     }
 
-    function addRowToTable(lead, index) {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${lead.name}</td>
-        <td>${lead.email}</td>
-        <td>${lead.phone}</td>
-        <td>${lead.status}</td>
-        <td>${lead.customer}</td>
-        <td>${lead.company}</td>
-        <td>${lead.brand}</td>
-        <td>${lead.category}</td>
-        <td>${lead.quotationDate}</td>
-        <td>${lead.endDate}</td>
-      `;
-      row.appendChild(createActionsCell(row, index));
-      leadTableBody.appendChild(row);
-    }
-
-    function createActionsCell(row, index) {
-      const actionsCell = document.createElement("td");
-      const editBtn = document.createElement("button");
-      const deleteBtn = document.createElement("button");
-
-      editBtn.textContent = "Edit";
-      editBtn.className = "btn edit-btn";
-      editBtn.onclick = () => {
-        const lead = leads[index];
-        document.getElementById("leadName").value = lead.name;
-        document.getElementById("leadEmail").value = lead.email;
-        document.getElementById("leadPhone").value = lead.phone;
-        document.getElementById("leadStatus").value = lead.status;
-        document.getElementById("customerName").value = lead.customer;
-        document.getElementById("companyName").value = lead.company;
-        document.getElementById("productBrand").value = lead.brand;
-        document.getElementById("category").value = lead.category;
-        document.getElementById("quotationDate").value = lead.quotationDate;
-        document.getElementById("endDate").value = lead.endDate;
-        editRow = index;
-      };
-
-      deleteBtn.textContent = "Delete";
-      deleteBtn.className = "btn delete-btn";
-      deleteBtn.onclick = () => {
-        leads.splice(index, 1);
-        saveLeadsToStorage();
-        renderTable();
-      };
-
-      actionsCell.appendChild(editBtn);
-      actionsCell.appendChild(deleteBtn);
-      return actionsCell;
-    }
-
-    function renderTable() {
-      leadTableBody.innerHTML = "";
-      leads.forEach(addRowToTable);
-    }
-
-    leadForm.addEventListener("submit", function (e) {
+    leadForm.addEventListener('submit', (e) => {
       e.preventDefault();
-
-      const lead = {
-        name: document.getElementById("leadName").value.trim(),
-        email: document.getElementById("leadEmail").value.trim(),
-        phone: document.getElementById("leadPhone").value.trim(),
-        status: document.getElementById("leadStatus").value.trim(),
-        customer: document.getElementById("customerName").value.trim(),
-        company: document.getElementById("companyName").value.trim(),
-        brand: document.getElementById("productBrand").value,
-        category: document.getElementById("category").value,
-        quotationDate: document.getElementById("quotationDate").value,
-        endDate: document.getElementById("endDate").value
+      const newLead = {
+        customerNumber: document.getElementById('customerNumber').value,
+        customerName: document.getElementById('customerName').value,
+        companyName: document.getElementById('companyName').value,
+        email: document.getElementById('email').value,
+        phone: document.getElementById('phone').value,
+        source: document.getElementById('source').value,
+        product: document.getElementById('product').value,
+        category: document.getElementById('category').value,
+        status: document.getElementById('status').value,
+        inquiryDate: document.getElementById('inquiryDate').value,
+        dueDate: document.getElementById('dueDate').value,
+        followUp: document.getElementById('followUp').value,
+        remarks: document.getElementById('remarks').value
       };
-
-      if (editRow !== null) {
-        leads[editRow] = lead;
-        editRow = null;
-      } else {
-        leads.push(lead);
-      }
-
-      saveLeadsToStorage();
-      renderTable();
+      leads.push(newLead);
+      saveLeads();
+      renderLeads();
       leadForm.reset();
     });
 
-    function downloadCSV() {
-      if (leads.length === 1) {
-        alert("No leads to export.");
-        return;
-      }
+    function deleteLead(index) {
+      leads.splice(index, 1);
+      saveLeads();
+      renderLeads();
+    }
 
-      const headers = [
-        "Lead Name",
-        "Email",
-        "Phone",
-        "Status",
-        "Customer",
-        "Company",
-        "Brand",
-        "Category",
-        "Quotation Date",
-        "End Date"
-      ];
+    function editLead(index) {
+      const lead = leads[index];
+      document.getElementById('customerNumber').value = lead.customerNumber;
+      document.getElementById('customerName').value = lead.customerName;
+      document.getElementById('companyName').value = lead.companyName;
+      document.getElementById('email').value = lead.email;
+      document.getElementById('phone').value = lead.phone;
+      document.getElementById('source').value = lead.source;
+      document.getElementById('product').value = lead.product;
+      document.getElementById('category').value = lead.category;
+      document.getElementById('status').value = lead.status;
+      document.getElementById('followUp').value = lead.followUp;
+      document.getElementById('inquiryDate').value = lead.inquiryDate;
+      document.getElementById('dueDate').value = lead.dueDate;
+      document.getElementById('remarks').value = lead.remarks;
+      
+      
+      deleteLead(index);
+    }
 
-      const rows = leads.map(lead => [
-        lead.name,
-        lead.email,
-        lead.phone,
-        lead.status,
-        lead.customer,
-        lead.company,
-        lead.brand,
-        lead.category,
-        lead.quotationDate,
-        lead.endDate
-      ]);
+    function exportCSV() {
+      const headers = ["Customer Name","Company Name", "Email", "Phone", "Source","Product","Category","Status", "Inquiry Date", "Due Date", "Follow-Up","Remarks"];
+      const rows = leads.map(lead =>
+        [lead.customerNumber ,lead.customerName,lead.companyName, lead.email, lead.phone, lead.source,lead.product,lead.category ,lead.status, lead.followUp, lead.inquiryDate, lead.dueDate, lead.remarks]
+      );
+      let csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
 
-      const csvContent = [headers, ...rows]
-        .map(row => row.map(value => `"${value}"`).join(","))
-        .join("\n");
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-
+      const encodedUri = encodeURI(csvContent);
       const link = document.createElement("a");
-      link.setAttribute("href", url);
+      link.setAttribute("href", encodedUri);
       link.setAttribute("download", "leads.csv");
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     }
 
-    csvFile.addEventListener("change", function () {
-      const file = csvFile.files[0];
+    function importCSV() {
+      const file = document.getElementById('csvFile').files[0];
       if (!file) return;
-
       const reader = new FileReader();
-      reader.onload = function (e) {
-        const text = e.target.result;
-        const rows = text.trim().split("\n").slice(1); // Skip header row
-        for (let row of rows) {
-          const values = row.split(",").map(v => v.replace(/(^"|"$)/g, ""));
-          if (values.length === 10) {
-            leads.push({
+      reader.onload = function(e) {
+        const lines = e.target.result.split("\n").filter(Boolean);
+        const headers = lines[0].split(",").map(h => h.trim());
+        lines.slice(1).forEach(line => {
+          const values = line.split(",");
+          if (values.length >= 9) {
+            const lead = {
               name: values[0],
               email: values[1],
               phone: values[2],
-              status: values[3],
-              customer: values[4],
-              company: values[5],
-              brand: values[6],
-              category: values[7],
-              quotationDate: values[8],
-              endDate: values[9]
-            });
+              source: values[3],
+              status: values[4],
+              followUp: values[5],
+              inquiryDate: values[6],
+              dueDate: values[7],
+              remarks: values[8]
+            };
+            leads.push(lead);
           }
-        }
-        saveLeadsToStorage();
-        renderTable();
+        });
+        saveLeads();
+        renderLeads();
       };
       reader.readAsText(file);
-      csvFile.value = "";
-    });
+    }
 
-    // Load leads on page load
-    loadLeadsFromStorage();
+    function filterLeads() {
+      const query = searchInput.value.toLowerCase();
+      const filtered = leads.filter(lead =>
+        Object.values(lead).some(val => val && val.toLowerCase().includes(query))
+      );
+      renderLeads(filtered);
+    }
+
+    // Initial render
+    renderLeads();
   </script>
+ <script>
+  function generateCustomerNumber() {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+    const dateString = `${day}/${month}/${year}`; // e.g. 21/05/2025
+    const storageKey = `leadCount-${dateString}`;
 
+    // Retrieve the current count for today's date
+    let todayCount = parseInt(localStorage.getItem(storageKey)) || 0;
+
+    // Increment the count for this session
+    todayCount += 1;
+
+    // Save updated count back to localStorage
+    localStorage.setItem(storageKey, todayCount);
+
+    // Generate customer number like L21/05/2025-1
+    const customerNumber = `L${dateString}-${todayCount}`;
+    document.getElementById("customerNumber").value = customerNumber;
+  }
+
+  // Call this when the form opens or on page load if needed
+  window.addEventListener('DOMContentLoaded', () => {
+    generateCustomerNumber();
+  });
+</script>
 </body>
 </html>

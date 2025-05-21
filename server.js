@@ -281,3 +281,60 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
+/* ------------------- ANALYTICS ENDPOINT ------------------- */
+app.get('/api/analytics', (req, res) => {
+  try {
+    const leads = readJSON(LEADS_FILE);
+    const contacts = readJSON(CONTACTS_FILE);
+    const deals = readJSON(DEALS_FILE);
+
+    const totalLeads = leads.length;
+    const totalContacts = contacts.length;
+    const totalDeals = deals.length;
+
+    const wonDeals = deals.filter(d => d.status?.toLowerCase() === 'won');
+    const lostDeals = deals.filter(d => d.status?.toLowerCase() === 'lost');
+
+    const conversionRate = totalLeads ? ((wonDeals.length / totalLeads) * 100).toFixed(2) : '0.00';
+
+    // Deals won/lost per month
+    const wonPerMonth = {};
+    const lostPerMonth = {};
+
+    deals.forEach(deal => {
+      const date = new Date(deal.date || deal.createdAt || Date.now());
+      const month = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+
+      if (deal.status?.toLowerCase() === 'won') {
+        wonPerMonth[month] = (wonPerMonth[month] || 0) + 1;
+      } else if (deal.status?.toLowerCase() === 'lost') {
+        lostPerMonth[month] = (lostPerMonth[month] || 0) + 1;
+      }
+    });
+
+    // Recent activity (last 5 leads/deals/contacts combined by date)
+    const combined = [
+      ...leads.map(l => ({ type: 'lead', ...l })),
+      ...contacts.map(c => ({ type: 'contact', ...c })),
+      ...deals.map(d => ({ type: 'deal', ...d })),
+    ];
+
+    const recentActivity = combined
+      .filter(item => item.date || item.createdAt)
+      .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+      .slice(0, 5);
+
+    res.json({
+      totalLeads,
+      totalContacts,
+      totalDeals,
+      conversionRate,
+      wonPerMonth,
+      lostPerMonth,
+      recentActivity,
+    });
+  } catch (err) {
+    console.error('Analytics error:', err);
+    res.status(500).json({ success: false });
+  }
+});
