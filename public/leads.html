@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Leads - Bintech CRM</title>
+  <!-- Flatpickr CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -200,15 +203,15 @@
       </div>
       <div>
         <label for="inquiryDate">Inquiry Date</label>
-        <input type="date" id="inquiryDate" />
+        <input type="text" id="inquiryDate" />
       </div>
       <div>
         <label for="dueDate">Due Date</label>
-        <input type="date" id="dueDate" />
+        <input type="text" id="dueDate" />
       </div>
       <div>
         <label for="followUp">Follow-Up Date</label>
-        <input type="date" id="followUp" />
+        <input type="text" id="followUp" />
       </div>
       
       <div style="grid-column: span 2;">
@@ -256,12 +259,12 @@
         const row = document.createElement('tr');
         row.innerHTML = `
          <td>
-  <a href="deals.html?number=${lead.customerNumber}&name=${encodeURIComponent(lead.customerName)}&company=${encodeURIComponent(lead.companyName)}&phone=${encodeURIComponent(lead.phone)}&email=${encodeURIComponent(lead.email)}&source=${encodeURIComponent(lead.source)}&brand=${encodeURIComponent(lead.category)}&product=${encodeURIComponent(lead.product)}">
+  <a href="deals.html?number=${lead.customerNumber}&name=${encodeURIComponent(lead.customerName)}&company=${encodeURIComponent(lead.companyName)}&phone=${encodeURIComponent(lead.phone)}&email=${encodeURIComponent(lead.email)}&source=${encodeURIComponent(lead.source)}&brand=${encodeURIComponent(lead.category)}&product=${encodeURIComponent(lead.product)} &inquiryDate=${lead.inquiryDate}">
     ${lead.customerNumber}
   </a>
 </td>
 <td>
-  <a href="deals.html?number=${lead.customerNumber}&name=${encodeURIComponent(lead.customerName)}&company=${encodeURIComponent(lead.companyName)}&phone=${encodeURIComponent(lead.phone)}&email=${encodeURIComponent(lead.email)}&source=${encodeURIComponent(lead.source)}&brand=${encodeURIComponent(lead.category)}&product=${encodeURIComponent(lead.product)}">
+  <a href="deals.html?number=${lead.customerNumber}&name=${encodeURIComponent(lead.customerName)}&company=${encodeURIComponent(lead.companyName)}&phone=${encodeURIComponent(lead.phone)}&email=${encodeURIComponent(lead.email)}&source=${encodeURIComponent(lead.source)}&brand=${encodeURIComponent(lead.category)}&product=${encodeURIComponent(lead.product)}" &inquiryDate=${lead.inquiryDate}>
     ${lead.customerName}
   </a>
 </td>
@@ -422,6 +425,33 @@
   // Call this when the form opens or on page load if needed
   window.addEventListener('DOMContentLoaded', () => {
     generateCustomerNumber();
+  });
+</script>
+<!-- Flatpickr JS -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+  flatpickr("#inquiryDate", {
+    enableTime: true,
+    dateFormat: "Y-m-d h:i K", // 12-hour format with AM/PM
+    altInput: true,
+    altFormat: "F j, Y h:i K",
+    minuteIncrement: 1
+  });
+
+  flatpickr("#dueDate", {
+    enableTime: true,
+    dateFormat: "Y-m-d h:i K",
+    altInput: true,
+    altFormat: "F j, Y h:i K",
+    minuteIncrement: 1  
+  });
+
+  flatpickr("#followUp", {
+    enableTime: true,
+    dateFormat: "Y-m-d h:i K",
+    altInput: true,
+    altFormat: "F j, Y h:i K",
+    minuteIncrement: 1  
   });
 </script>
 </body>

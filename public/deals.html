@@ -133,11 +133,12 @@
     min-width: 250px;
   }
 
-  .form-group label {
-    font-weight: bold;
-    margin-bottom: 6px;
-    color: #2c3e50;
-  }
+ .form-group label {
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: #0a66c2; /* Same blue as in Leads page */
+}
+
 
   form input,
   form select {
@@ -147,6 +148,7 @@
     border-radius: 6px;
     margin-bottom: 10px;
     font-size: 14px;
+    font-weight: bold; 
   }
 
   form button {
@@ -256,6 +258,8 @@ table th {
     }
   }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
 </head>
 <body>
@@ -314,8 +318,11 @@ table th {
       <label for="customerNumberInput">Customer Number</label>
       <input type="text" id="customerNumberInput" name="customerNumber" />
     </div>
+    <div class="form-group">
+      <label for="inquiryDateInput">Inquiry Date</label>
+      <input type="text" id="inquiryDateInput" name="inquiryDate" />
+    </div>
   </div>
-
   <div class="form-row">
     <div class="form-group">
       <label for="customerNameInput">Customer Name</label>
@@ -355,21 +362,31 @@ table th {
       <input type="text" id="brandInput" name="brand" />
     </div>
     <div class="form-group">
-      <label for="inquiryDateInput">Inquiry Date</label>
-      <input type="date" id="inquiryDateInput" name="inquiryDate" />
-    </div>
-  </div>
+  <label for="followUpPhoneInput">Follow Up on Phone</label>
+ <input type="text" class="flatpickr-datetime" id="followUpPhoneInput">
+</div>
+<div class="form-group">
+  <label for="followUpEmailInput">Follow Up on Email</label>
+  <input type="text" class="flatpickr-datetime" id="followUpEmailInput">
+</div>
+<div class="form-group">
+  <label for="quotationDateInput">Quotation Date</label>
+  <input type="text" class="quotationDateInput" id="quotationDate" />
+</div>
 
+  </div>
   <div style="text-align: right; margin-top: 20px;">
     <button type="submit">➕ Add Deal</button>
   </div>
 </form>
+
 
       <table>
         <thead>
           <tr>
             <th>Deal</th>
             <th>Customer Number</th>
+            <th>Inquiry Date</th>
             <th>Amount</th>
             <th>Stage</th>
             <th>Customer</th>
@@ -379,7 +396,9 @@ table th {
             <th>Source</th>
             <th>Product</th>
             <th>Brand</th>
-            <th>Inquiry Date</th>
+            <th>Follow Up (Phone)</th>         
+            <th>Follow Up (Email)</th>         
+            <th>Quotation Date</th>    
             <th>Actions</th>
           </tr>
         </thead>
@@ -401,6 +420,7 @@ table th {
       row.innerHTML = `
         <td>${deal.name}</td>
         <td>${deal.customerNumber}</td>
+        <td>${deal.inquiryDate}</td>
         <td>${deal.amount}</td>
         <td><span class="stage-tag ${deal.stage.replace(/\s/g, '\\ ')}">${deal.stage}</span></td>
 
@@ -411,7 +431,10 @@ table th {
         <td>${deal.source}</td>
         <td>${deal.product}</td>
         <td>${deal.brand}</td>
-        <td>${deal.inquiryDate}</td>
+        <td>${deal.followUpPhone}</td>       
+        <td>${deal.followUpEmail}</td>       
+        <td>${deal.quotationDate}</td>  
+
         <td class="action-buttons">
           <button class="edit-btn" data-index="${index}">Edit</button>
           <button class="delete-btn" data-index="${index}">Delete</button>
@@ -426,41 +449,50 @@ table th {
     localStorage.setItem("deals", JSON.stringify(deals));
   }
 
-  dealForm.addEventListener("submit", function (e) {
-    e.preventDefault();
+ dealForm.addEventListener("submit", async function (e) {
+  e.preventDefault();
 
-    const name = document.getElementById("dealName").value.trim();
-    const amount = document.getElementById("dealAmount").value.trim();
-    const stage = document.getElementById("dealStage").value.trim();
-    const customerNumber = document.getElementById("customerNumberInput").value.trim();
-    const customer = document.getElementById("customerNameInput").value.trim();
-    const company = document.getElementById("companyNameInput").value.trim();
-    const email = document.getElementById("emailInput").value.trim();
-    const phone = document.getElementById("phoneInput").value.trim();
-    const source = document.getElementById("sourceInput").value.trim();
-    const product = document.getElementById("productInput").value.trim();
-    const brand = document.getElementById("brandInput").value.trim();
-    const inquiryDate = document.getElementById("inquiryDateInput").value;
+  const dealData = {
+    name: document.getElementById("dealName").value.trim(),
+    amount: document.getElementById("dealAmount").value.trim(),
+    stage: document.getElementById("dealStage").value.trim(),
+    customerNumber: document.getElementById("customerNumberInput").value.trim(),
+    inquiryDate: document.getElementById("inquiryDateInput").value,
+    customer: document.getElementById("customerNameInput").value.trim(),
+    company: document.getElementById("companyNameInput").value.trim(),
+    email: document.getElementById("emailInput").value.trim(),
+    phone: document.getElementById("phoneInput").value.trim(),
+    source: document.getElementById("sourceInput").value.trim(),
+    product: document.getElementById("productInput").value.trim(),
+    brand: document.getElementById("brandInput").value.trim(),
+    followUpPhone: document.getElementById("followUpPhoneInput").value.trim(),
+    followUpEmail: document.getElementById("followUpEmailInput").value.trim(),
+    quotationDate: document.getElementById("quotationDateInput").value.trim()
+  };
 
-    const dealData = {
-      name, amount, stage, customerNumber,
-      customer, company, email, phone,
-      source, product, brand, inquiryDate
-    };
+  try {
+    const response = await fetch("/api/deals", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(dealData)
+    });
 
-    if (editingIndex >= 0) {
-      // Update existing
-      deals[editingIndex] = dealData;
-      editingIndex = -1;
+    const result = await response.json();
+
+    if (result.success) {
+      alert("✅ Deal added successfully!");
+      dealForm.reset();
+      loadDeals(); // Re-fetch deals from DB if you have this function
     } else {
-      // Add new
-      deals.push(dealData);
+      alert("❌ Failed to add deal.");
     }
-
-    saveDeals();
-    renderDeals();
-    dealForm.reset();
-  });
+  } catch (error) {
+    console.error("❌ Error submitting deal:", error);
+    alert("❌ Something went wrong.");
+  }
+});
 
   function addRowEvents() {
     document.querySelectorAll(".edit-btn").forEach(button => {
@@ -471,6 +503,7 @@ table th {
         document.getElementById("dealAmount").value = deal.amount;
         document.getElementById("dealStage").value = deal.stage;
         document.getElementById("customerNumberInput").value = deal.customerNumber;
+        document.getElementById("inquiryDateInput").value = deal.inquiryDate;
         document.getElementById("customerNameInput").value = deal.customer;
         document.getElementById("companyNameInput").value = deal.company;
         document.getElementById("emailInput").value = deal.email;
@@ -478,7 +511,9 @@ table th {
         document.getElementById("sourceInput").value = deal.source;
         document.getElementById("productInput").value = deal.product;
         document.getElementById("brandInput").value = deal.brand;
-        document.getElementById("inquiryDateInput").value = deal.inquiryDate;
+        document.getElementById("followUpPhoneInput").value = deal.followUpPhone;
+        document.getElementById("followUpEmailInput").value = deal.followUpEmail;
+        document.getElementById("quotationDateInput").value = deal.quotationDate;
 
         editingIndex = index;
       });
@@ -501,6 +536,7 @@ table th {
     const params = new URLSearchParams(window.location.search);
     const fields = {
       customerNumberInput: "number",
+      inquiryDateInput: "inquiryDate",
       customerNameInput: "name",
       companyNameInput: "company",
       emailInput: "email",
@@ -508,7 +544,7 @@ table th {
       sourceInput: "source",
       productInput: "product",
       brandInput: "brand",
-      inquiryDateInput: "inquiryDate"
+      
     };
 
     for (const [inputId, paramName] of Object.entries(fields)) {
@@ -529,6 +565,22 @@ table th {
 
     renderDeals();
   };
+</script>
+<script>
+  flatpickr(".flatpickr-datetime", {
+    enableTime: true,
+    dateFormat: "m/d/Y, h:i K",  // Internal value format
+    altInput: true,
+    altFormat: "m/d/Y, h:i K" ,  // Display format for users
+    minuteIncrement: 1  
+  });
+  flatpickr("#quotationDate", {
+    enableTime: true,
+    dateFormat: "Y-m-d h:i K", // 12-hour format with AM/PM
+    altInput: true,
+    altFormat: "F j, Y h:i K",
+    minuteIncrement: 1
+  });
 </script>
 </body>
 </html>
