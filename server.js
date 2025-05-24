@@ -174,10 +174,10 @@ app.get('/api/export-leads', async (req, res) => {
 
 /* ---------- USER LOGIN ---------- */
 app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
   try {
     const user = await User.findOne({
-      $or: [{ username }, { email: username }]
+      $or: [{ email }, {username: email }]
     });
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
