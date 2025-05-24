@@ -1,4 +1,3 @@
-<!-- public/login.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,43 +10,74 @@
   <div class="container">
     <h2>Login to Bintech CRM</h2>
     <form id="loginForm">
-      <input type="text" id="username" name="username" required autocomplete="username" placeholder="Username or Email">
+      <input type="text" id="username" name="username" required autocomplete="username" placeholder="Username">
       <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Password">
-      <button type="submit">Login</button>
+      <button type="submit" id="loginBtn">Login</button>
     </form>
 
-    <p id="error" style="color: red;"></p>
+    <p id="error" style="color: red; display: none;"></p>
+    <p id="loading" style="color: blue; display: none;">Logging in...</p>
   </div>
 
   <script>
     document.getElementById("loginForm").addEventListener("submit", async function(e) {
       e.preventDefault();
 
-      const username = document.getElementById("username").value;
+      const loginBtn = document.getElementById("loginBtn");
+      const errorEl = document.getElementById("error");
+      const loadingEl = document.getElementById("loading");
+      
+      // Show loading state
+      errorEl.style.display = "none";
+      loadingEl.style.display = "block";
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Logging in...";
+
+      const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value;
 
-      // Automatically switch between local and deployed API base URLs
-      const apiBase = location.hostname === "localhost"
-        ? "http://localhost:3000"
-       : "https://bintech-crm.onrender.com"; // your actual Render backend URL
       try {
-        const res = await fetch(`${apiBase}/api/login`, {
+        console.log("Attempting login for:", username);
+        
+        // Simple relative URL - works on both localhost and production
+        const res = await fetch("/api/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password })
         });
 
+        console.log("Response status:", res.status);
+        
         const data = await res.json();
+        console.log("Response data:", data);
 
-        if (data.success) {
+        if (res.ok && data.success) {
+          loadingEl.textContent = "Login successful! Redirecting...";
           localStorage.setItem("isLoggedIn", "true");
-          window.location.href = "leads.html";
+          
+          setTimeout(() => {
+            window.location.href = "leads.html";
+          }, 1000);
         } else {
-          document.getElementById("error").textContent = data.message;
+          // Show error message
+          loadingEl.style.display = "none";
+          errorEl.textContent = data.message || "Login failed";
+          errorEl.style.display = "block";
+          
+          // Reset button
+          loginBtn.disabled = false;
+          loginBtn.textContent = "Login";
         }
-      } catch (err) {
-        console.error("Login request failed:", err);
-        document.getElementById("error").textContent = "Network error. Please try again.";
+
+      } catch (error) {
+        console.error("Login error:", error);
+        loadingEl.style.display = "none";
+        errorEl.textContent = "Network error. Please try again.";
+        errorEl.style.display = "block";
+        
+        // Reset button
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Login";
       }
     });
   </script>
