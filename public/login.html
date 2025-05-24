@@ -11,21 +11,18 @@
   <div class="container">
     <h2>Login to Bintech CRM</h2>
     <form id="loginForm">
-      <label for="username">Username or Email</label>
-      <input type="text" id="username" required />
+  <input type="text" id="email" name="email" required autocomplete="username">
+  <input type="password" id="password" name="password" required autocomplete="current-password">
+  <button type="submit">Login</button>
+</form>
 
-      <label for="password">Password</label>
-      <input type="password" id="password" required />
-
-      <button type="submit">Login</button>
-    </form>
     <p id="error" style="color: red;"></p>
   </div>
 
   <script>
   document.getElementById("loginForm").addEventListener("submit", async function(e) {
     e.preventDefault();
-    const username = document.getElementById("username").value;
+    const username = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
     const res = await fetch("/api/login", {
