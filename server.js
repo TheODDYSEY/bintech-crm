@@ -31,7 +31,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // ✅ DEALS ROUTES (using external file)
 app.use("/api/deals", require("./routes/deals"));
-app.use("/api/leads", require("./routes/leads")); 
+app.use("/api/leads", require("./routes/leads"));
 
 const upload = multer({ dest: 'uploads/' });
 
@@ -174,10 +174,10 @@ app.get('/api/export-leads', async (req, res) => {
 
 /* ---------- USER LOGIN ---------- */
 app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
   try {
     const user = await User.findOne({
-      $or: [{ email }, {username: email }]
+      $or: [{ username }, { email: username }]
     });
 
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
