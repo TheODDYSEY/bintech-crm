@@ -172,24 +172,26 @@ app.get('/api/export-leads', async (req, res) => {
   }
 });
 
-/* ---------- USER LOGIN ---------- */
-app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body;
+app.get("/api/seed-user", async (req, res) => {
   try {
-    const user = await User.findOne({
-      $or: [{ username }, { email: username }]
+    const existing = await User.findOne({ username: "bintechadmin" });
+    if (existing) return res.json({ success: true, message: "User already exists" });
+
+    const passwordHash = await bcrypt.hash("Bintech56", 10);
+    const newUser = new User({
+      username: "bintechadmin",
+      email: "admin@bintech.co.ke",
+      passwordHash,
     });
 
-    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-      return res.status(401).json({ success: false, message: 'Invalid username or password' });
-    }
-
-    res.json({ success: true });
+    await newUser.save();
+    res.json({ success: true, message: "User created" });
   } catch (err) {
-    console.error('❌ Login error:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error("Seed error:", err);
+    res.status(500).json({ success: false, message: "Failed to seed user" });
   }
 });
+
 
 /* ---------- REDIRECT ROOT ---------- */
 app.get('/', (req, res) => {
