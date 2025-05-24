@@ -24,10 +24,15 @@ mongoose.connect(MONGO_URI || 'mongodb://localhost:27017/bintech_crm')
   });
 
 // ✅ MIDDLEWARE FIRST - BEFORE ANY ROUTES
+const cors = require('cors');
+
 app.use(cors({
-  origin: ["http://localhost:5500", "https://bintech-crm.onrender.com"],
-  credentials: true
+  origin: 'https://bintech-crm.onrender.com', // ✅ Frontend origin
+  credentials: true,                          // ✅ If you're using cookies/session
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // ✅ Support all needed methods
+  allowedHeaders: ['Content-Type', 'Authorization']     // ✅ Allow custom headers
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
