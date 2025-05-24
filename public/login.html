@@ -40,7 +40,7 @@
         console.log("Attempting login for:", username);
         
         // Simple relative URL - works on both localhost and production
-        const res = await fetch("/api/login", {
+        const res = await fetch("https://bintech-crm-api.onrender.com/api/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password })

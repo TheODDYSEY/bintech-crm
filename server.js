@@ -24,7 +24,10 @@ mongoose.connect(MONGO_URI || 'mongodb://localhost:27017/bintech_crm')
   });
 
 // ✅ MIDDLEWARE FIRST - BEFORE ANY ROUTES
-app.use(cors());
+app.use(cors({
+  origin: "https://bintech-crm.onrender.com",
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
