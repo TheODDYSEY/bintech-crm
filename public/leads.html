@@ -8,6 +8,16 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 
   <style>
+    :root {
+      --primary: #2c3e50;
+      --accent: #3498db;
+      --light-gray: #ecf0f1;
+      --success: #28a745;
+      --danger: #dc3545;
+      --info: #17a2b8;
+      --warning: #f39c12;
+    }
+
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -66,14 +76,6 @@
       background-color: #084a9a;
     }
 
-    .csv-buttons {
-      margin-bottom: 15px;
-    }
-
-    .csv-buttons button {
-      margin-right: 10px;
-    }
-
     .search-bar {
       margin-bottom: 15px;
       text-align: right;
@@ -109,6 +111,82 @@
     .actions button {
       margin-right: 5px;
     }
+
+    /* CSV Import/Export Section Styling - Compact single line layout */
+    .import-export-section {
+      margin: 20px 0;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #dee2e6;
+    }
+
+    .import-export-section h3 {
+      margin: 0 0 10px 0;
+      color: var(--primary);
+      font-size: 16px;
+    }
+
+    .import-export-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: nowrap;
+      align-items: center;
+    }
+
+    .file-import-group {
+      display: contents;
+    }
+
+    .csv-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .csv-btn:hover {
+      opacity: 0.85;
+    }
+
+    .choose-file-btn {
+      background-color: var(--success);
+      color: white;
+    }
+
+    .import-btn {
+      background-color: var(--info);
+      color: white;
+    }
+
+    .import-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .export-btn {
+      background-color: var(--warning);
+      color: white;
+    }
+
+    .clear-btn {
+      background-color: var(--danger);
+      color: white;
+    }
+
+    #fileInfo {
+      margin-left: 10px;
+      font-size: 12px;
+      color: #666;
+      flex: 1;
+    }
+
+    #csvFileInput {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -125,17 +203,10 @@
   <div class="container">
     <h1>Leads</h1>
 
-    <div class="csv-buttons">
-      <input type="file" id="csvFile" accept=".csv" />
-      <button onclick="importCSV()">Import CSV</button>
-      <button onclick="exportCSV()">Export CSV</button>
-    </div>
-
     <div class="search-bar">
-  <input type="text" id="searchInput" placeholder="Search leads..." />
-  <button onclick="filterLeads()">Search</button>
-</div>
-
+      <input type="text" id="searchInput" placeholder="Search leads..." />
+      <button onclick="filterLeads()">Search</button>
+    </div>
 
     <form id="leadForm">
       <div>
@@ -223,6 +294,28 @@
       </div>
     </form>
 
+    <!-- CSV Import/Export Section - Compact single line layout -->
+    <div class="import-export-section">
+      <h3>📁 Import/Export Data</h3>
+      
+      <div class="import-export-controls">
+        <input type="file" id="csvFileInput" accept=".csv" style="display: none;" />
+        <button type="button" class="csv-btn choose-file-btn" onclick="document.getElementById('csvFileInput').click()">
+          📂 Choose CSV
+        </button>
+        <button type="button" class="csv-btn import-btn" id="importBtn" onclick="importCSV()" disabled="true">
+          📥 Import CSV
+        </button>
+        <button type="button" class="csv-btn export-btn" onclick="exportCSV()">
+          📤 Export CSV
+        </button>
+        <button type="button" class="csv-btn clear-btn" onclick="clearAllLeads()">
+          🗑️ Clear All
+        </button>
+        <div id="fileInfo"></div>
+      </div>
+    </div>
+
     <table id="leadsTable">
       <thead>
         <tr>
@@ -258,33 +351,33 @@
       filteredLeads.forEach((lead, index) => {
         const row = document.createElement('tr');
         row.innerHTML = `
-         <td>
-  <a href="deals.html?number=${lead.customerNumber}&name=${encodeURIComponent(lead.customerName)}&company=${encodeURIComponent(lead.companyName)}&phone=${encodeURIComponent(lead.phone)}&email=${encodeURIComponent(lead.email)}&source=${encodeURIComponent(lead.source)}&brand=${encodeURIComponent(lead.category)}&product=${encodeURIComponent(lead.product)} &inquiryDate=${lead.inquiryDate}">
-    ${lead.customerNumber}
-  </a>
-</td>
-<td>
-  <a href="deals.html?number=${lead.customerNumber}&name=${encodeURIComponent(lead.customerName)}&company=${encodeURIComponent(lead.companyName)}&phone=${encodeURIComponent(lead.phone)}&email=${encodeURIComponent(lead.email)}&source=${encodeURIComponent(lead.source)}&brand=${encodeURIComponent(lead.category)}&product=${encodeURIComponent(lead.product)}" &inquiryDate=${lead.inquiryDate}>
-    ${lead.customerName}
-  </a>
-</td>
+  <td>
+    <a href="deals.html?number=${lead.customerNumber}&name=${encodeURIComponent(lead.name || '')}&company=${encodeURIComponent(lead.company || '')}&phone=${encodeURIComponent(lead.phone || '')}&email=${encodeURIComponent(lead.email || '')}&source=${encodeURIComponent(lead.source || '')}&brand=${encodeURIComponent(lead.brand || '')}&product=${encodeURIComponent(lead.product || '')}&inquiryDate=${encodeURIComponent(lead.inquiryDate || '')}">
+      ${lead.customerNumber || ''}
+    </a>
+  </td>
+  <td>
+    <a href="deals.html?number=${lead.customerNumber}&name=${encodeURIComponent(lead.name || '')}&company=${encodeURIComponent(lead.company || '')}&phone=${encodeURIComponent(lead.phone || '')}&email=${encodeURIComponent(lead.email || '')}&source=${encodeURIComponent(lead.source || '')}&brand=${encodeURIComponent(lead.brand || '')}&product=${encodeURIComponent(lead.product || '')}&inquiryDate=${encodeURIComponent(lead.inquiryDate || '')}">
+      ${lead.name || ''}
+    </a>
+  </td>
+  <td>${lead.company || ''}</td>
+  <td>${lead.email || ''}</td>
+  <td>${lead.phone || ''}</td>
+  <td>${lead.source || ''}</td>
+  <td>${lead.product || ''}</td>
+  <td>${lead.brand || ''}</td>
+  <td>${lead.status || ''}</td>
+  <td>${lead.followUpPhone || lead.followUp || ''}</td>
+  <td>${lead.inquiryDate || ''}</td>
+  <td>${lead.dueDate || ''}</td>
+  <td>${lead.remarks || ''}</td>
+  <td class="actions">
+    <button onclick="editLead(${index})">Edit</button>
+    <button onclick="deleteLead(${index})">Delete</button>
+  </td>
+`;
 
-          <td>${lead.companyName}</td>
-          <td>${lead.email}</td>
-          <td>${lead.phone}</td>
-          <td>${lead.source}</td>
-          <td>${lead.product}</td>
-          <td>${lead.category}</td>
-          <td>${lead.status}</td>
-          <td>${lead.followUp}</td>
-          <td>${lead.inquiryDate}</td>
-          <td>${lead.dueDate}</td>
-          <td>${lead.remarks}</td>
-          <td class="actions">
-            <button onclick="editLead(${index})">Edit</button>
-            <button onclick="deleteLead(${index})">Delete</button>
-          </td>
-        `;
         leadsTableBody.appendChild(row);
       });
     }
@@ -293,33 +386,60 @@
       localStorage.setItem('leads', JSON.stringify(leads));
     }
 
-    leadForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const newLead = {
-        customerNumber: document.getElementById('customerNumber').value,
-        customerName: document.getElementById('customerName').value,
-        companyName: document.getElementById('companyName').value,
-        email: document.getElementById('email').value,
-        phone: document.getElementById('phone').value,
-        source: document.getElementById('source').value,
-        product: document.getElementById('product').value,
-        category: document.getElementById('category').value,
-        status: document.getElementById('status').value,
-        inquiryDate: document.getElementById('inquiryDate').value,
-        dueDate: document.getElementById('dueDate').value,
-        followUp: document.getElementById('followUp').value,
-        remarks: document.getElementById('remarks').value
-      };
-      leads.push(newLead);
-      saveLeads();
-      renderLeads();
-      leadForm.reset();
+     leadForm.addEventListener('submit', async function(event) {
+  event.preventDefault();
+
+  const newLead = {
+  name: document.getElementById('customerName').value,
+  customer: document.getElementById('customerName').value,
+  company: document.getElementById('companyName').value,
+  email: document.getElementById('email').value,
+  phone: document.getElementById('phone').value,
+  source: document.getElementById('source').value,
+  product: document.getElementById('product').value,
+  brand: document.getElementById('category').value,
+  customerNumber: document.getElementById('customerNumber').value,
+  inquiryDate: document.getElementById('inquiryDate').value,
+  followUpPhone: document.getElementById('followUp').value,
+  followUpEmail: document.getElementById('followUp').value,
+  quotationDate: "", // fill from form if you have an input
+  amount: "",
+  stage: "New" 
+};
+
+
+  // Save to localStorage
+  leads.push(newLead);
+  saveLeads();
+  renderLeads();
+
+  // ✅ Save to MongoDB
+  try {
+    const response = await fetch('http://localhost:3000/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newLead)
     });
 
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Unknown error');
+    console.log('✅ Lead saved to MongoDB:', result.lead);
+  } catch (err) {
+    console.error('❌ Failed to save lead to MongoDB:', err);
+    alert('Failed to save lead to server.');
+  }
+
+  leadForm.reset();
+  generateCustomerNumber(); // Generate new number for next lead
+});
+
+
     function deleteLead(index) {
-      leads.splice(index, 1);
-      saveLeads();
-      renderLeads();
+      if (confirm("Are you sure you want to delete this lead?")) {
+        leads.splice(index, 1);
+        saveLeads();
+        renderLeads();
+      }
     }
 
     function editLead(index) {
@@ -338,54 +458,214 @@
       document.getElementById('dueDate').value = lead.dueDate;
       document.getElementById('remarks').value = lead.remarks;
       
-      
-      deleteLead(index);
+      editLead(index);
     }
 
+    // Enhanced CSV Export function
     function exportCSV() {
-      const headers = ["Customer Name","Company Name", "Email", "Phone", "Source","Product","Category","Status", "Inquiry Date", "Due Date", "Follow-Up","Remarks"];
-      const rows = leads.map(lead =>
-        [lead.customerNumber ,lead.customerName,lead.companyName, lead.email, lead.phone, lead.source,lead.product,lead.category ,lead.status, lead.followUp, lead.inquiryDate, lead.dueDate, lead.remarks]
-      );
-      let csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+      if (leads.length === 0) {
+        alert("⚠️ No leads to export!");
+        return;
+      }
 
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "leads.csv");
+      // Define CSV headers
+      const headers = [
+        'Customer Number', 'Customer Name', 'Company Name', 'Email', 'Phone',
+        'Source', 'Product', 'Category', 'Status', 'Inquiry Date', 'Due Date',
+        'Follow-Up', 'Remarks'
+      ];
+
+      // Convert leads to CSV format with proper escaping
+      const csvContent = [
+        headers.join(','),
+        ...leads.map(lead => [
+          `"${(lead.customerNumber || '').replace(/"/g, '""')}"`,
+          `"${(lead.customerName || '').replace(/"/g, '""')}"`,
+          `"${(lead.companyName || '').replace(/"/g, '""')}"`,
+          `"${(lead.email || '').replace(/"/g, '""')}"`,
+          `"${(lead.phone || '').replace(/"/g, '""')}"`,
+          `"${(lead.source || '').replace(/"/g, '""')}"`,
+          `"${(lead.product || '').replace(/"/g, '""')}"`,
+          `"${(lead.category || '').replace(/"/g, '""')}"`,
+          `"${(lead.status || '').replace(/"/g, '""')}"`,
+          `"${(lead.inquiryDate || '').replace(/"/g, '""')}"`,
+          `"${(lead.dueDate || '').replace(/"/g, '""')}"`,
+          `"${(lead.followUp || '').replace(/"/g, '""')}"`,
+          `"${(lead.remarks || '').replace(/"/g, '""')}"`
+        ].join(','))
+      ].join('\n');
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `leads_export_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      alert(`✅ Exported ${leads.length} leads to CSV file!`);
     }
 
+    // Enhanced CSV Import function
     function importCSV() {
-      const file = document.getElementById('csvFile').files[0];
-      if (!file) return;
+      const fileInput = document.getElementById('csvFileInput');
+      const file = fileInput.files[0];
+      
+      if (!file) {
+        alert("⚠️ Please select a CSV file first!");
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = function(e) {
-        const lines = e.target.result.split("\n").filter(Boolean);
-        const headers = lines[0].split(",").map(h => h.trim());
-        lines.slice(1).forEach(line => {
-          const values = line.split(",");
-          if (values.length >= 9) {
-            const lead = {
-              name: values[0],
-              email: values[1],
-              phone: values[2],
-              source: values[3],
-              status: values[4],
-              followUp: values[5],
-              inquiryDate: values[6],
-              dueDate: values[7],
-              remarks: values[8]
-            };
-            leads.push(lead);
+        try {
+          const csv = e.target.result;
+          const lines = csv.split('\n').filter(line => line.trim());
+          
+          if (lines.length < 2) {
+            alert("⚠️ CSV file appears to be empty or invalid!");
+            return;
           }
-        });
+
+          // Parse header row
+          const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+          
+          // Expected headers mapping
+          const headerMap = {
+            'Customer Number': 'customerNumber',
+            'Customer Name': 'customerName',
+            'Company Name': 'companyName',
+            'Email': 'email',
+            'Phone': 'phone',
+            'Source': 'source',
+            'Product': 'product',
+            'Category': 'category',
+            'Status': 'status',
+            'Inquiry Date': 'inquiryDate',
+            'Due Date': 'dueDate',
+            'Follow-Up': 'followUp',
+            'Remarks': 'remarks'
+          };
+
+          const importedLeads = [];
+          let successCount = 0;
+          let errorCount = 0;
+
+          // Parse data rows
+          for (let i = 1; i < lines.length; i++) {
+            try {
+              const values = parseCSVLine(lines[i]);
+              const lead = {};
+              
+              headers.forEach((header, index) => {
+                const fieldName = headerMap[header];
+                if (fieldName && values[index] !== undefined) {
+                  lead[fieldName] = values[index].replace(/"/g, '').trim();
+                }
+              });
+
+              // Validate required fields
+              if (lead.customerName && lead.email) {
+                importedLeads.push(lead);
+                successCount++;
+              } else {
+                errorCount++;
+                console.warn(`Row ${i + 1}: Missing required fields (customerName or email)`);
+              }
+            } catch (error) {
+              errorCount++;
+              console.error(`Error parsing row ${i + 1}:`, error);
+            }
+          }
+
+          if (importedLeads.length > 0) {
+            // Ask user if they want to replace or append
+            const replace = confirm(
+              `Found ${importedLeads.length} valid leads to import.\n\n` +
+              `Click OK to REPLACE existing leads, or Cancel to ADD to existing leads.`
+            );
+
+            if (replace) {
+              leads = importedLeads;
+            } else {
+              leads = leads.concat(importedLeads);
+            }
+
+            saveLeads();
+            renderLeads();
+            
+            alert(
+              `✅ Import completed!\n` +
+              `• Successfully imported: ${successCount} leads\n` +
+              `• Errors/Skipped: ${errorCount} rows\n` +
+              `• Total leads now: ${leads.length}`
+            );
+          } else {
+            alert("❌ No valid leads found in the CSV file!");
+          }
+
+          // Reset file input
+          fileInput.value = '';
+          document.getElementById('importBtn').disabled = true;
+          document.getElementById('fileInfo').textContent = '';
+
+        } catch (error) {
+          console.error('CSV Import Error:', error);
+          alert("❌ Error reading CSV file. Please check the file format.");
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    // Helper function to parse CSV line with proper quote handling
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        
+        if (char === '"') {
+          if (inQuotes && line[i + 1] === '"') {
+            current += '"';
+            i++; // Skip next quote
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      
+      result.push(current);
+      return result;
+    }
+
+    function clearAllLeads() {
+      if (leads.length === 0) {
+        alert("⚠️ No leads to clear!");
+        return;
+      }
+
+      const confirmed = confirm(
+        `⚠️ Are you sure you want to delete ALL ${leads.length} leads?\n\n` +
+        "This action cannot be undone!"
+      );
+
+      if (confirmed) {
+        leads = [];
         saveLeads();
         renderLeads();
-      };
-      reader.readAsText(file);
+        alert("✅ All leads have been cleared!");
+      }
     }
 
     function filterLeads() {
@@ -395,6 +675,36 @@
       );
       renderLeads(filtered);
     }
+
+    // File input change handler
+    document.addEventListener('DOMContentLoaded', function() {
+      const fileInput = document.getElementById('csvFileInput');
+      const importBtn = document.getElementById('importBtn');
+      const fileInfo = document.getElementById('fileInfo');
+
+      if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            if (file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv')) {
+              importBtn.disabled = false;
+              importBtn.style.opacity = '1';
+              fileInfo.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+              fileInfo.style.color = '#28a745';
+            } else {
+              importBtn.disabled = true;
+              importBtn.style.opacity = '0.6';
+              fileInfo.textContent = 'Please select a valid CSV file';
+              fileInfo.style.color = '#dc3545';
+            }
+          } else {
+            importBtn.disabled = true;
+            importBtn.style.opacity = '0.6';
+            fileInfo.textContent = '';
+          }
+        });
+      }
+    });
 
     // Initial render
     renderLeads();

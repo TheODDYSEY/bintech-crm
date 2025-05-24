@@ -290,7 +290,7 @@ table th {
 
     <div id="dealContainer">
       <form id="dealForm">
-  <h2>Add a New Deal</h2>
+      <h2>Add a New Deal</h2>
 
   <div class="form-row">
     <div class="form-group">
@@ -373,13 +373,45 @@ table th {
   <label for="quotationDateInput">Quotation Date</label>
   <input type="text" class="quotationDateInput" id="quotationDate" />
 </div>
-
   </div>
   <div style="text-align: right; margin-top: 20px;">
     <button type="submit">➕ Add Deal</button>
   </div>
 </form>
 
+      <!-- CSV Import/Export Section -->
+      <div style="margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+        <h3 style="margin-bottom: 15px; color: var(--primary);">📁 Import/Export Data</h3>
+        
+        <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+          <!-- File Import -->
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <input type="file" id="csvFileInput" accept=".csv" style="display: none;" />
+            <button type="button" onclick="document.getElementById('csvFileInput').click()" 
+                    style="background-color: var(--success); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+              📂 Choose CSV File
+            </button>
+            <button type="button" id="importBtn" onclick="importCSV()" disabled="true"
+                    style="background-color: var(--info); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; opacity: 0.6;">
+              📥 Import CSV
+            </button>
+          </div>
+          
+          <!-- File Export -->
+          <button type="button" onclick="exportCSV()" 
+                  style="background-color: var(--warning); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+            📤 Export to CSV
+          </button>
+          
+          <!-- Clear All Data -->
+          <button type="button" onclick="clearAllDeals()" 
+                  style="background-color: var(--danger); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+            🗑️ Clear All Data
+          </button>
+        </div>
+        
+        <div id="fileInfo" style="margin-top: 10px; font-size: 13px; color: #666;"></div>
+      </div>
 
       <table>
         <thead>
@@ -416,25 +448,27 @@ table th {
   function renderDeals() {
     dealTableBody.innerHTML = "";
     deals.forEach((deal, index) => {
+      // Provide default values for missing properties
+      const dealStage = deal.stage || '';
+      const stageClass = dealStage ? dealStage.replace(/\s/g, '\\ ') : '';
+      
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>${deal.name}</td>
-        <td>${deal.customerNumber}</td>
-        <td>${deal.inquiryDate}</td>
-        <td>${deal.amount}</td>
-        <td><span class="stage-tag ${deal.stage.replace(/\s/g, '\\ ')}">${deal.stage}</span></td>
-
-        <td>${deal.customer}</td>
-        <td>${deal.company}</td>
-        <td>${deal.email}</td>
-        <td>${deal.phone}</td>
-        <td>${deal.source}</td>
-        <td>${deal.product}</td>
-        <td>${deal.brand}</td>
-        <td>${deal.followUpPhone}</td>       
-        <td>${deal.followUpEmail}</td>       
-        <td>${deal.quotationDate}</td>  
-
+        <td>${deal.name || ''}</td>
+        <td>${deal.customerNumber || ''}</td>
+        <td>${deal.inquiryDate || ''}</td>
+        <td>${deal.amount || ''}</td>
+        <td><span class="stage-tag ${stageClass}">${dealStage}</span></td>
+        <td>${deal.customer || ''}</td>
+        <td>${deal.company || ''}</td>
+        <td>${deal.email || ''}</td>
+        <td>${deal.phone || ''}</td>
+        <td>${deal.source || ''}</td>
+        <td>${deal.product || ''}</td>
+        <td>${deal.brand || ''}</td>
+        <td>${deal.followUpPhone || ''}</td>       
+        <td>${deal.followUpEmail || ''}</td>       
+        <td>${deal.quotationDate || ''}</td>  
         <td class="action-buttons">
           <button class="edit-btn" data-index="${index}">Edit</button>
           <button class="delete-btn" data-index="${index}">Delete</button>
@@ -449,71 +483,97 @@ table th {
     localStorage.setItem("deals", JSON.stringify(deals));
   }
 
- dealForm.addEventListener("submit", async function (e) {
-  e.preventDefault();
+  // Fixed form submission - works with both API and localStorage fallback
+  dealForm.addEventListener("submit", async function (e) {
+    e.preventDefault();
 
-  const dealData = {
-    name: document.getElementById("dealName").value.trim(),
-    amount: document.getElementById("dealAmount").value.trim(),
-    stage: document.getElementById("dealStage").value.trim(),
-    customerNumber: document.getElementById("customerNumberInput").value.trim(),
-    inquiryDate: document.getElementById("inquiryDateInput").value,
-    customer: document.getElementById("customerNameInput").value.trim(),
-    company: document.getElementById("companyNameInput").value.trim(),
-    email: document.getElementById("emailInput").value.trim(),
-    phone: document.getElementById("phoneInput").value.trim(),
-    source: document.getElementById("sourceInput").value.trim(),
-    product: document.getElementById("productInput").value.trim(),
-    brand: document.getElementById("brandInput").value.trim(),
-    followUpPhone: document.getElementById("followUpPhoneInput").value.trim(),
-    followUpEmail: document.getElementById("followUpEmailInput").value.trim(),
-    quotationDate: document.getElementById("quotationDateInput").value.trim()
-  };
+    const dealData = {
+      name: document.getElementById("dealName").value.trim(),
+      amount: document.getElementById("dealAmount").value.trim(),
+      stage: document.getElementById("dealStage").value.trim(),
+      customerNumber: document.getElementById("customerNumberInput").value.trim(),
+      inquiryDate: document.getElementById("inquiryDateInput").value,
+      customer: document.getElementById("customerNameInput").value.trim(),
+      company: document.getElementById("companyNameInput").value.trim(),
+      email: document.getElementById("emailInput").value.trim(),
+      phone: document.getElementById("phoneInput").value.trim(),
+      source: document.getElementById("sourceInput").value.trim(),
+      product: document.getElementById("productInput").value.trim(),
+      brand: document.getElementById("brandInput").value.trim(),
+      followUpPhone: document.getElementById("followUpPhoneInput").value.trim(),
+      followUpEmail: document.getElementById("followUpEmailInput").value.trim(),
+      quotationDate: document.getElementById("quotationDate").value.trim()
+    };
 
-  try {
-    const response = await fetch("/api/deals", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(dealData)
-    });
-
-    const result = await response.json();
-
-    if (result.success) {
-      alert("✅ Deal added successfully!");
+    if (editingIndex >= 0) {
+      // Update existing deal
+      deals[editingIndex] = dealData;
+      editingIndex = -1;
+      saveDeals();
+      renderDeals();
+      alert("✅ Deal updated successfully!");
       dealForm.reset();
-      loadDeals(); // Re-fetch deals from DB if you have this function
-    } else {
-      alert("❌ Failed to add deal.");
+      return;
     }
-  } catch (error) {
-    console.error("❌ Error submitting deal:", error);
-    alert("❌ Something went wrong.");
-  }
-});
+
+    // Try to save to API first, fallback to localStorage
+    try {
+      const response = await fetch("/api/deals", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(dealData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result && result._id) {
+          // Add MongoDB deal to local array
+          deals.push({
+            ...dealData,
+            _id: result._id
+          });
+          saveDeals();
+          renderDeals();
+          alert("✅ Deal saved to database successfully!");
+          dealForm.reset();
+          return;
+        }
+      }
+      throw new Error("API response not valid");
+    } catch (error) {
+      console.warn("API failed, saving to localStorage:", error);
+      
+      // Fallback to localStorage only
+      deals.push(dealData);
+      saveDeals();
+      renderDeals();
+      alert("✅ Deal saved locally (API unavailable)!");
+      dealForm.reset();
+    }
+  });
 
   function addRowEvents() {
     document.querySelectorAll(".edit-btn").forEach(button => {
       button.addEventListener("click", () => {
         const index = parseInt(button.getAttribute("data-index"));
         const deal = deals[index];
-        document.getElementById("dealName").value = deal.name;
-        document.getElementById("dealAmount").value = deal.amount;
-        document.getElementById("dealStage").value = deal.stage;
-        document.getElementById("customerNumberInput").value = deal.customerNumber;
-        document.getElementById("inquiryDateInput").value = deal.inquiryDate;
-        document.getElementById("customerNameInput").value = deal.customer;
-        document.getElementById("companyNameInput").value = deal.company;
-        document.getElementById("emailInput").value = deal.email;
-        document.getElementById("phoneInput").value = deal.phone;
-        document.getElementById("sourceInput").value = deal.source;
-        document.getElementById("productInput").value = deal.product;
-        document.getElementById("brandInput").value = deal.brand;
-        document.getElementById("followUpPhoneInput").value = deal.followUpPhone;
-        document.getElementById("followUpEmailInput").value = deal.followUpEmail;
-        document.getElementById("quotationDateInput").value = deal.quotationDate;
+        document.getElementById("dealName").value = deal.name || '';
+        document.getElementById("dealAmount").value = deal.amount || '';
+        document.getElementById("dealStage").value = deal.stage || '';
+        document.getElementById("customerNumberInput").value = deal.customerNumber || '';
+        document.getElementById("inquiryDateInput").value = deal.inquiryDate || '';
+        document.getElementById("customerNameInput").value = deal.customer || '';
+        document.getElementById("companyNameInput").value = deal.company || '';
+        document.getElementById("emailInput").value = deal.email || '';
+        document.getElementById("phoneInput").value = deal.phone || '';
+        document.getElementById("sourceInput").value = deal.source || '';
+        document.getElementById("productInput").value = deal.product || '';
+        document.getElementById("brandInput").value = deal.brand || '';
+        document.getElementById("followUpPhoneInput").value = deal.followUpPhone || '';
+        document.getElementById("followUpEmailInput").value = deal.followUpEmail || '';
+        document.getElementById("quotationDate").value = deal.quotationDate || '';
 
         editingIndex = index;
       });
@@ -531,6 +591,246 @@ table th {
     });
   }
 
+  // CSV Import/Export Functions
+  function exportCSV() {
+    if (deals.length === 0) {
+      alert("⚠️ No deals to export!");
+      return;
+    }
+
+    // Define CSV headers
+    const headers = [
+      'Deal Name', 'Customer Number', 'Inquiry Date', 'Amount', 'Stage',
+      'Customer', 'Company', 'Email', 'Phone', 'Source', 'Product', 'Brand',
+      'Follow Up Phone', 'Follow Up Email', 'Quotation Date'
+    ];
+
+    // Convert deals to CSV format
+    const csvContent = [
+      headers.join(','),
+      ...deals.map(deal => [
+        `"${(deal.name || '').replace(/"/g, '""')}"`,
+        `"${(deal.customerNumber || '').replace(/"/g, '""')}"`,
+        `"${(deal.inquiryDate || '').replace(/"/g, '""')}"`,
+        `"${(deal.amount || '').replace(/"/g, '""')}"`,
+        `"${(deal.stage || '').replace(/"/g, '""')}"`,
+        `"${(deal.customer || '').replace(/"/g, '""')}"`,
+        `"${(deal.company || '').replace(/"/g, '""')}"`,
+        `"${(deal.email || '').replace(/"/g, '""')}"`,
+        `"${(deal.phone || '').replace(/"/g, '""')}"`,
+        `"${(deal.source || '').replace(/"/g, '""')}"`,
+        `"${(deal.product || '').replace(/"/g, '""')}"`,
+        `"${(deal.brand || '').replace(/"/g, '""')}"`,
+        `"${(deal.followUpPhone || '').replace(/"/g, '""')}"`,
+        `"${(deal.followUpEmail || '').replace(/"/g, '""')}"`,
+        `"${(deal.quotationDate || '').replace(/"/g, '""')}"`
+      ].join(','))
+    ].join('\n');
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `deals_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    alert(`✅ Exported ${deals.length} deals to CSV file!`);
+  }
+
+  function importCSV() {
+    const fileInput = document.getElementById('csvFileInput');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+      alert("⚠️ Please select a CSV file first!");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const csv = e.target.result;
+        const lines = csv.split('\n').filter(line => line.trim());
+        
+        if (lines.length < 2) {
+          alert("⚠️ CSV file appears to be empty or invalid!");
+          return;
+        }
+
+        // Parse header row
+        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+        
+        // Expected headers mapping
+        const headerMap = {
+          'Deal Name': 'name',
+          'Customer Number': 'customerNumber',
+          'Inquiry Date': 'inquiryDate',
+          'Amount': 'amount',
+          'Stage': 'stage',
+          'Customer': 'customer',
+          'Company': 'company',
+          'Email': 'email',
+          'Phone': 'phone',
+          'Source': 'source',
+          'Product': 'product',
+          'Brand': 'brand',
+          'Follow Up Phone': 'followUpPhone',
+          'Follow Up Email': 'followUpEmail',
+          'Quotation Date': 'quotationDate'
+        };
+
+        const importedDeals = [];
+        let successCount = 0;
+        let errorCount = 0;
+
+        // Parse data rows
+        for (let i = 1; i < lines.length; i++) {
+          try {
+            const values = parseCSVLine(lines[i]);
+            const deal = {};
+            
+            headers.forEach((header, index) => {
+              const fieldName = headerMap[header];
+              if (fieldName && values[index] !== undefined) {
+                deal[fieldName] = values[index].replace(/"/g, '').trim();
+              }
+            });
+
+            // Validate required fields
+            if (deal.name && deal.stage) {
+              importedDeals.push(deal);
+              successCount++;
+            } else {
+              errorCount++;
+              console.warn(`Row ${i + 1}: Missing required fields (name or stage)`);
+            }
+          } catch (error) {
+            errorCount++;
+            console.error(`Error parsing row ${i + 1}:`, error);
+          }
+        }
+
+        if (importedDeals.length > 0) {
+          // Ask user if they want to replace or append
+          const replace = confirm(
+            `Found ${importedDeals.length} valid deals to import.\n\n` +
+            `Click OK to REPLACE existing deals, or Cancel to ADD to existing deals.`
+          );
+
+          if (replace) {
+            deals = importedDeals;
+          } else {
+            deals = deals.concat(importedDeals);
+          }
+
+          saveDeals();
+          renderDeals();
+          
+          alert(
+            `✅ Import completed!\n` +
+            `• Successfully imported: ${successCount} deals\n` +
+            `• Errors/Skipped: ${errorCount} rows\n` +
+            `• Total deals now: ${deals.length}`
+          );
+        } else {
+          alert("❌ No valid deals found in the CSV file!");
+        }
+
+        // Reset file input
+        fileInput.value = '';
+        document.getElementById('importBtn').disabled = true;
+        document.getElementById('fileInfo').textContent = '';
+
+      } catch (error) {
+        console.error('CSV Import Error:', error);
+        alert("❌ Error reading CSV file. Please check the file format.");
+      }
+    };
+
+    reader.readAsText(file);
+  }
+
+  // Helper function to parse CSV line with proper quote handling
+  function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    
+    result.push(current);
+    return result;
+  }
+
+  function clearAllDeals() {
+    if (deals.length === 0) {
+      alert("⚠️ No deals to clear!");
+      return;
+    }
+
+    const confirmed = confirm(
+      `⚠️ Are you sure you want to delete ALL ${deals.length} deals?\n\n` +
+      "This action cannot be undone!"
+    );
+
+    if (confirmed) {
+      deals = [];
+      saveDeals();
+      renderDeals();
+      alert("✅ All deals have been cleared!");
+    }
+  }
+
+  // File input change handler
+  document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('csvFileInput');
+    const importBtn = document.getElementById('importBtn');
+    const fileInfo = document.getElementById('fileInfo');
+
+    if (fileInput) {
+      fileInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          if (file.type === 'text/csv' || file.name.toLowerCase().endsWith('.csv')) {
+            importBtn.disabled = false;
+            importBtn.style.opacity = '1';
+            fileInfo.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            fileInfo.style.color = '#28a745';
+          } else {
+            importBtn.disabled = true;
+            importBtn.style.opacity = '0.6';
+            fileInfo.textContent = 'Please select a valid CSV file';
+            fileInfo.style.color = '#dc3545';
+          }
+        } else {
+          importBtn.disabled = true;
+          importBtn.style.opacity = '0.6';
+          fileInfo.textContent = '';
+        }
+      });
+    }
+  });
+
   window.onload = function () {
     // Autofill from URL params
     const params = new URLSearchParams(window.location.search);
@@ -544,7 +844,6 @@ table th {
       sourceInput: "source",
       productInput: "product",
       brandInput: "brand",
-      
     };
 
     for (const [inputId, paramName] of Object.entries(fields)) {

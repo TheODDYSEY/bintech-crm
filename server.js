@@ -14,7 +14,7 @@ const { Parser } = require('json2csv');
 const bcrypt = require('bcrypt');
 
 const app = express();
-const PORT = 3011;
+const PORT = 3000;
 
 mongoose.connect(MONGO_URI || 'mongodb://localhost:27017/bintech_crm')
   .then(() => console.log('✅ MongoDB connected'))
@@ -22,21 +22,22 @@ mongoose.connect(MONGO_URI || 'mongodb://localhost:27017/bintech_crm')
     console.error('❌ MongoDB connection error:', err);
     process.exit(1);
   });
-app.use("/api/deals", require("./routes/deals"));
-// app.listen(3000, '127.0.0.1', ...) // Removed invalid line
-app.listen(3011, () => console.log("Server running on http://localhost:3011"));
 
+// ✅ MIDDLEWARE FIRST - BEFORE ANY ROUTES
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ✅ DEALS ROUTES (using external file)
+app.use("/api/deals", require("./routes/deals"));
+app.use("/api/leads", require("./routes/leads")); 
 
 const upload = multer({ dest: 'uploads/' });
 
 // Models
 const Lead = require('./models/leads');
 const Contact = require('./models/contacts');
-const Deal = require('./models/deals');
 const User = require('./models/users');
 
 /* ---------- CONTACTS ---------- */
@@ -45,16 +46,20 @@ app.get('/api/contacts', async (req, res) => {
     const contacts = await Contact.find();
     res.json(contacts);
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error('❌ Error fetching contacts:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/contacts', async (req, res) => {
+  console.log('🚀 Received contact data:', req.body);
   try {
-    await Contact.create(req.body);
-    res.json({ success: true });
+    const newContact = await Contact.create(req.body);
+    console.log('✅ Contact saved:', newContact);
+    res.json({ success: true, contact: newContact });
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error('❌ Error saving contact:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -64,7 +69,8 @@ app.delete('/api/contacts/:phone', async (req, res) => {
     if (result.deletedCount === 0) return res.status(404).json({ success: false });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error('❌ Error deleting contact:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -81,7 +87,8 @@ app.post('/api/import-contacts', upload.single('file'), async (req, res) => {
         fs.unlinkSync(req.file.path);
         res.json({ success: true, imported: results.length });
       } catch (err) {
-        res.status(500).json({ success: false });
+        console.error('❌ Error importing contacts:', err);
+        res.status(500).json({ success: false, error: err.message });
       }
     });
 });
@@ -94,7 +101,8 @@ app.get('/api/export-contacts', async (req, res) => {
     res.setHeader('Content-Type', 'text/csv');
     res.send(csvData);
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error('❌ Error exporting contacts:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -104,17 +112,20 @@ app.get('/api/leads', async (req, res) => {
     const leads = await Lead.find();
     res.json(leads);
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error('❌ Error fetching leads:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
 app.post('/api/leads', async (req, res) => {
   console.log('🚀 Received lead data:', req.body);
   try {
-    await Lead.create(req.body);
-    res.json({ success: true });
+    const newLead = await Lead.create(req.body);
+    console.log('✅ Lead saved:', newLead);
+    res.json({ success: true, lead: newLead });
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error('❌ Error saving lead:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -124,7 +135,8 @@ app.delete('/api/leads', async (req, res) => {
     if (result.deletedCount === 0) return res.status(404).json({ success: false });
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ success: false });
+    console.error('❌ Error deleting lead:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -141,7 +153,8 @@ app.post('/api/import-leads', upload.single('file'), async (req, res) => {
         fs.unlinkSync(req.file.path);
         res.json({ success: true, imported: results.length });
       } catch (err) {
-        res.status(500).json({ success: false });
+        console.error('❌ Error importing leads:', err);
+        res.status(500).json({ success: false, error: err.message });
       }
     });
 });
@@ -154,69 +167,8 @@ app.get('/api/export-leads', async (req, res) => {
     res.setHeader('Content-Type', 'text/csv');
     res.send(csvData);
   } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-/* ---------- DEALS ---------- */
-app.get('/api/deals', async (req, res) => {
-  try {
-    const deals = await Deal.find();
-    res.json(deals);
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-app.post('/api/deals', async (req, res) => {
-  try {
-    await Deal.create(req.body);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-app.delete('/api/deals', async (req, res) => {
-  try {
-    const result = await Deal.deleteOne({
-      name: req.body.name,
-      customer: req.body.customer
-    });
-    if (result.deletedCount === 0) return res.status(404).json({ success: false });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ success: false });
-  }
-});
-
-app.post('/api/import-deals', upload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, message: 'No file uploaded' });
-
-  const results = [];
-  fs.createReadStream(req.file.path)
-    .pipe(csv())
-    .on('data', data => results.push(data))
-    .on('end', async () => {
-      try {
-        await Deal.insertMany(results);
-        fs.unlinkSync(req.file.path);
-        res.json({ success: true, imported: results.length });
-      } catch (err) {
-        res.status(500).json({ success: false });
-      }
-    });
-});
-
-app.get('/api/export-deals', async (req, res) => {
-  try {
-    const deals = await Deal.find();
-    const csvData = new Parser().parse(deals);
-    res.setHeader('Content-Disposition', 'attachment; filename=deals.csv');
-    res.setHeader('Content-Type', 'text/csv');
-    res.send(csvData);
-  } catch (err) {
-    res.status(500).json({ success: false });
+    console.error('❌ Error exporting leads:', err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -234,6 +186,7 @@ app.post('/api/login', async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
+    console.error('❌ Login error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
