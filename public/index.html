@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRM System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      .auth-form {
+        background: white;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+        backdrop-filter: blur(10px);
+      }
+
+      .dashboard {
+        display: none;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .nav-tabs {
+        display: flex;
+        background: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .nav-tab {
+        flex: 1;
+        padding: 15px 20px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s;
+        font-weight: 500;
+      }
+
+      .nav-tab.active {
+        background: white;
+        border-bottom-color: #667eea;
+        color: #667eea;
+      }
+
+      .nav-tab:hover {
+        background: #e9ecef;
+      }
+
+      .tab-content {
+        padding: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+        color: white;
+      }
+
+      .btn-danger {
+        background: #dc3545;
+        color: white;
+      }
+
+      .btn-small {
+        padding: 6px 12px;
+        font-size: 12px;
+        margin-right: 5px;
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      .table th,
+      .table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .table tbody tr:hover {
+        background: #f8f9fa;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(5px);
+      }
+
+      .modal-content {
+        background: white;
+        margin: 5% auto;
+        padding: 30px;
+        border-radius: 15px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      }
+
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .close:hover {
+        color: #000;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        opacity: 0.9;
+      }
+
+      .search-bar {
+        margin-bottom: 20px;
+      }
+
+      .search-bar input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e1e5e9;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      .alert {
+        padding: 12px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      .alert-success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .alert-error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+
+        .auth-form {
+          padding: 20px;
+        }
+
+        .table {
+          font-size: 12px;
+        }
+
+        .table th,
+        .table td {
+          padding: 8px 4px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="authContainer" class="auth-container">
+      <div class="auth-form">
+        <h2 id="authTitle">Login to CRM</h2>
+        <div id="alertContainer"></div>
+
+        <form id="authForm">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" required />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" required />
+          </div>
+
+          <div class="form-group" id="nameGroup" style="display: none">
+            <label for="name">Full Name</label>
+            <input type="text" id="name" />
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%">
+            <span id="authButton">Login</span>
+          </button>
+        </form>
+
+        <p style="text-align: center; margin-top: 20px">
+          <span id="authSwitchText">Don't have an account?</span>
+          <a href="#" id="authSwitch" style="color: #667eea">Sign up</a>
+        </p>
+      </div>
+    </div>
+
+    <div id="dashboard" class="dashboard">
+      <div class="header">
+        <h1>CRM Dashboard</h1>
+        <div>
+          <span id="userWelcome">Welcome!</span>
+          <button
+            id="logoutBtn"
+            class="btn btn-secondary"
+            style="margin-left: 20px"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
+
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="contacts">Contacts</button>
+        <button class="nav-tab" data-tab="leads">Leads</button>
+        <button class="nav-tab" data-tab="sales">Sales</button>
+      </div>
+
+      <div class="container">
+        <!-- Contacts Tab -->
+        <div id="contactsTab" class="tab-content">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number" id="contactsCount">0</div>
+              <div class="stat-label">Total Contacts</div>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            "
+          >
+            <h3>Contacts Management</h3>
+            <button id="addContactBtn" class="btn btn-primary">
+              Add Contact
+            </button>
+          </div>
+
+          <div class="search-bar">
+            <input
+              type="text"
+              id="contactSearch"
+              placeholder="Search contacts..."
+            />
+          </div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Company</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="contactsTable"></tbody>
+          </table>
+        </div>
+
+        <!-- Leads Tab -->
+        <div id="leadsTab" class="tab-content hidden">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number" id="leadsCount">0</div>
+              <div class="stat-label">Total Leads</div>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            "
+          >
+            <h3>Leads Management</h3>
+            <button id="addLeadBtn" class="btn btn-primary">Add Lead</button>
+          </div>
+
+          <div class="search-bar">
+            <input type="text" id="leadSearch" placeholder="Search leads..." />
+          </div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Status</th>
+                <th>Source</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="leadsTable"></tbody>
+          </table>
+        </div>
+
+        <!-- Sales Tab -->
+        <div id="salesTab" class="tab-content hidden">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number" id="salesCount">0</div>
+              <div class="stat-label">Total Sales</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number" id="salesRevenue">$0</div>
+              <div class="stat-label">Revenue</div>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 20px;
+            "
+          >
+            <h3>Sales Management</h3>
+            <button id="addSaleBtn" class="btn btn-primary">Add Sale</button>
+          </div>
+
+          <div class="search-bar">
+            <input type="text" id="saleSearch" placeholder="Search sales..." />
+          </div>
+
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Product</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="salesTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="modal">
+      <div class="modal-content">
+        <span class="close" data-modal="contactModal">&times;</span>
+        <h3 id="contactModalTitle">Add Contact</h3>
+        <form id="contactForm">
+          <div class="form-group">
+            <label for="contactName">Name</label>
+            <input type="text" id="contactName" required />
+          </div>
+          <div class="form-group">
+            <label for="contactEmail">Email</label>
+            <input type="email" id="contactEmail" required />
+          </div>
+          <div class="form-group">
+            <label for="contactPhone">Phone</label>
+            <input type="tel" id="contactPhone" />
+          </div>
+          <div class="form-group">
+            <label for="contactCompany">Company</label>
+            <input type="text" id="contactCompany" />
+          </div>
+          <div class="form-group">
+            <label for="contactNotes">Notes</label>
+            <textarea id="contactNotes" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Contact</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Lead Modal -->
+    <div id="leadModal" class="modal">
+      <div class="modal-content">
+        <span class="close" data-modal="leadModal">&times;</span>
+        <h3 id="leadModalTitle">Add Lead</h3>
+        <form id="leadForm">
+          <div class="form-group">
+            <label for="leadName">Name</label>
+            <input type="text" id="leadName" required />
+          </div>
+          <div class="form-group">
+            <label for="leadEmail">Email</label>
+            <input type="email" id="leadEmail" required />
+          </div>
+          <div class="form-group">
+            <label for="leadPhone">Phone</label>
+            <input type="tel" id="leadPhone" />
+          </div>
+          <div class="form-group">
+            <label for="leadStatus">Status</label>
+            <select id="leadStatus" required>
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="qualified">Qualified</option>
+              <option value="proposal">Proposal</option>
+              <option value="closed-won">Closed Won</option>
+              <option value="closed-lost">Closed Lost</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="leadSource">Source</label>
+            <select id="leadSource">
+              <option value="website">Website</option>
+              <option value="referral">Referral</option>
+              <option value="social-media">Social Media</option>
+              <option value="email">Email</option>
+              <option value="phone">Phone</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="leadNotes">Notes</label>
+            <textarea id="leadNotes" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Lead</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Sale Modal -->
+    <div id="saleModal" class="modal">
+      <div class="modal-content">
+        <span class="close" data-modal="saleModal">&times;</span>
+        <h3 id="saleModalTitle">Add Sale</h3>
+        <form id="saleForm">
+          <div class="form-group">
+            <label for="saleCustomer">Customer Name</label>
+            <input type="text" id="saleCustomer" required />
+          </div>
+          <div class="form-group">
+            <label for="saleAmount">Amount</label>
+            <input type="number" id="saleAmount" step="0.01" required />
+          </div>
+          <div class="form-group">
+            <label for="saleProduct">Product/Service</label>
+            <input type="text" id="saleProduct" required />
+          </div>
+          <div class="form-group">
+            <label for="saleStatus">Status</label>
+            <select id="saleStatus" required>
+              <option value="pending">Pending</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="refunded">Refunded</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="saleDate">Date</label>
+            <input type="date" id="saleDate" required />
+          </div>
+          <div class="form-group">
+            <label for="saleNotes">Notes</label>
+            <textarea id="saleNotes" rows="3"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Save Sale</button>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // API Configuration
+      const API_BASE_URL = "http://localhost:3000/api";
+      let authToken = localStorage.getItem("authToken") || null;
+
+      // API utility functions
+      async function apiCall(endpoint, options = {}) {
+        const config = {
+          headers: {
+            "Content-Type": "application/json",
+            ...(authToken && { Authorization: `Bearer ${authToken}` }),
+          },
+          ...options,
+        };
+
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "API call failed");
+        }
+
+        return data;
+      }
+
+      // Application State
+      let currentUser = null;
+      let currentTab = "contacts";
+      let editingId = null;
+      let data = {
+        users: [],
+        contacts: [],
+        leads: [],
+        sales: [],
+      };
+
+      // Initialize app
+      document.addEventListener("DOMContentLoaded", function () {
+        loadFromStorage();
+        setupEventListeners();
+        checkAuthStatus();
+      });
+
+      // Setup event listeners
+      function setupEventListeners() {
+        // Auth form
+        document
+          .getElementById("authForm")
+          .addEventListener("submit", handleAuth);
+        document
+          .getElementById("authSwitch")
+          .addEventListener("click", toggleAuthMode);
+        document.getElementById("logoutBtn").addEventListener("click", logout);
+
+        // Tab navigation
+        document.querySelectorAll(".nav-tab").forEach((tab) => {
+          tab.addEventListener("click", () => switchTab(tab.dataset.tab));
+        });
+
+        // Modal controls
+        document.querySelectorAll(".close").forEach((closeBtn) => {
+          closeBtn.addEventListener("click", () =>
+            closeModal(closeBtn.dataset.modal)
+          );
+        });
+
+        // Add buttons
+        document
+          .getElementById("addContactBtn")
+          .addEventListener("click", () => openModal("contactModal"));
+        document
+          .getElementById("addLeadBtn")
+          .addEventListener("click", () => openModal("leadModal"));
+        document
+          .getElementById("addSaleBtn")
+          .addEventListener("click", () => openModal("saleModal"));
+
+        // Forms
+        document
+          .getElementById("contactForm")
+          .addEventListener("submit", handleContactSubmit);
+        document
+          .getElementById("leadForm")
+          .addEventListener("submit", handleLeadSubmit);
+        document
+          .getElementById("saleForm")
+          .addEventListener("submit", handleSaleSubmit);
+
+        // Search
+        document
+          .getElementById("contactSearch")
+          .addEventListener("input", (e) =>
+            filterTable("contacts", e.target.value)
+          );
+        document
+          .getElementById("leadSearch")
+          .addEventListener("input", (e) =>
+            filterTable("leads", e.target.value)
+          );
+        document
+          .getElementById("saleSearch")
+          .addEventListener("input", (e) =>
+            filterTable("sales", e.target.value)
+          );
+
+        // Close modals when clicking outside
+        window.addEventListener("click", (e) => {
+          if (e.target.classList.contains("modal")) {
+            e.target.style.display = "none";
+          }
+        });
+      }
+
+      // Auth functions
+      async function handleAuth(e) {
+        e.preventDefault();
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const name = document.getElementById("name").value;
+        const isSignup =
+          document.getElementById("authButton").textContent === "Sign Up";
+
+        try {
+          if (isSignup) {
+            const response = await apiCall("/auth/register", {
+              method: "POST",
+              body: JSON.stringify({ name, email, password }),
+            });
+            showAlert("Account created successfully!", "success");
+            toggleAuthMode();
+          } else {
+            const response = await apiCall("/auth/login", {
+              method: "POST",
+              body: JSON.stringify({ email, password }),
+            });
+
+            authToken = response.token;
+            localStorage.setItem("authToken", authToken);
+            currentUser = response.user;
+            showDashboard();
+          }
+        } catch (error) {
+          showAlert(error.message, "error");
+        }
+      }
+      function toggleAuthMode() {
+        const isLogin =
+          document.getElementById("authButton").textContent === "Login";
+
+        if (isLogin) {
+          // Switch to signup
+          document.getElementById("authTitle").textContent = "Create Account";
+          document.getElementById("authButton").textContent = "Sign Up";
+          document.getElementById("authSwitchText").textContent =
+            "Already have an account?";
+          document.getElementById("authSwitch").textContent = "Login";
+          document.getElementById("nameGroup").style.display = "block";
+          document.getElementById("name").required = true;
+        } else {
+          // Switch to login
+          document.getElementById("authTitle").textContent = "Login to CRM";
+          document.getElementById("authButton").textContent = "Login";
+          document.getElementById("authSwitchText").textContent =
+            "Don't have an account?";
+          document.getElementById("authSwitch").textContent = "Sign up";
+          document.getElementById("nameGroup").style.display = "none";
+          document.getElementById("name").required = false;
+        }
+
+        // Clear form
+        document.getElementById("authForm").reset();
+        clearAlerts();
+      }
+
+      function checkAuthStatus() {
+        if (authToken && currentUser) {
+          showDashboard();
+        } else if (authToken) {
+          // Token exists but no user data, clear it
+          localStorage.removeItem("authToken");
+          authToken = null;
+        }
+      }
+
+      function showDashboard() {
+        document.getElementById("authContainer").style.display = "none";
+        document.getElementById("dashboard").style.display = "block";
+        document.getElementById(
+          "userWelcome"
+        ).textContent = `Welcome, ${currentUser.name}!`;
+        loadDashboardData();
+      }
+
+      function logout() {
+        currentUser = null;
+        document.getElementById("authContainer").style.display = "flex";
+        document.getElementById("dashboard").style.display = "none";
+        document.getElementById("authForm").reset();
+        clearAlerts();
+      }
+
+      function loadFromStorage() {
+  try {
+    const storedData = localStorage.getItem('crmData');
+    if (storedData) {
+      data = JSON.parse(storedData);
+    }
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      currentUser = JSON.parse(storedUser);
+    }
+  } catch (error) {
+    console.error('Error loading from storage:', error);
+  }
+}
+function saveToStorage() {
+  try {
+    localStorage.setItem('crmData', JSON.stringify(data));
+    if (currentUser) {
+      localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    }
+  } catch (error) {
+    console.error('Error saving to storage:', error);
+  }
+}
+
+      // Tab management
+      function switchTab(tabName) {
+        // Update tab buttons
+        document.querySelectorAll(".nav-tab").forEach((tab) => {
+          tab.classList.remove("active");
+        });
+        document
+          .querySelector(`[data-tab="${tabName}"]`)
+          .classList.add("active");
+
+        // Show/hide tab content
+        document.querySelectorAll(".tab-content").forEach((content) => {
+          content.classList.add("hidden");
+        });
+        document.getElementById(`${tabName}Tab`).classList.remove("hidden");
+
+        currentTab = tabName;
+        loadTabData(tabName);
+      }
+
+      async function loadDashboardData() {
+        try {
+          await Promise.all([loadContacts(), loadLeads(), loadSales()]);
+          updateStats();
+        } catch (error) {
+          showAlert("Failed to load dashboard data", "error");
+        }
+      }
+
+      async function loadContacts() {
+        try {
+          const contacts = await apiCall("/contacts");
+          data.contacts = contacts;
+          renderContacts();
+        } catch (error) {
+          showAlert("Failed to load contacts", "error");
+        }
+      }
+
+      async function loadLeads() {
+        try {
+          const leads = await apiCall("/leads");
+          data.leads = leads;
+          renderLeads();
+        } catch (error) {
+          showAlert("Failed to load leads", "error");
+        }
+      }
+
+      async function loadSales() {
+        try {
+          const sales = await apiCall("/sales");
+          data.sales = sales;
+          renderSales();
+        } catch (error) {
+          showAlert("Failed to load sales", "error");
+        }
+      }
+
+      function loadTabData(tabName) {
+  switch(tabName) {
+    case 'contacts':
+      renderContacts();
+      break;
+    case 'leads':
+      renderLeads();
+      break;
+    case 'sales':
+      renderSales();
+      break;
+  }
+}
+
+      // Contact functions
+      function renderContacts() {
+        const tbody = document.getElementById("contactsTable");
+        const userContacts = data.contacts.filter(
+          (c) => c.userId === currentUser.id
+        );
+
+        tbody.innerHTML = userContacts
+          .map(
+            (contact) => `
+                <tr>
+                    <td>${contact.name}</td>
+                    <td>${contact.email}</td>
+                    <td>${contact.phone || "N/A"}</td>
+                    <td>${contact.company || "N/A"}</td>
+                    <td>
+                        <button class="btn btn-small btn-primary" onclick="editContact('${
+                          contact._id
+                        }')">Edit</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteContact('${
+                          contact._id
+                        }')">Delete</button>
+                    </td>
+                </tr>
+            `
+          )
+          .join("");
+      }
+
+      async function handleContactSubmit(e) {
+  e.preventDefault();
+
+  const contactData = {
+    name: document.getElementById("contactName").value,
+    email: document.getElementById("contactEmail").value,
+    phone: document.getElementById("contactPhone").value,
+    company: document.getElementById("contactCompany").value,
+    notes: document.getElementById("contactNotes").value,
+    userId: currentUser.id,
+    id: editingId || generateId(),
+    _id: editingId || generateId()
+  };
+
+  try {
+    if (editingId) {
+      // Try API first, fallback to localStorage
+      try {
+        await apiCall(`/contacts/${editingId}`, {
+          method: "PUT",
+          body: JSON.stringify(contactData),
+        });
+      } catch (apiError) {
+        // Fallback to localStorage
+        const index = data.contacts.findIndex(c => (c._id === editingId || c.id === editingId));
+        if (index !== -1) {
+          data.contacts[index] = { ...data.contacts[index], ...contactData };
+          saveToStorage();
+        }
+      }
+    } else {
+      try {
+        const response = await apiCall("/contacts", {
+          method: "POST",
+          body: JSON.stringify(contactData),
+        });
+        contactData._id = response._id || contactData._id;
+      } catch (apiError) {
+        // Fallback to localStorage
+        data.contacts.push(contactData);
+        saveToStorage();
+      }
+    }
+
+    closeModal("contactModal");
+    await loadContacts().catch(() => renderContacts()); // Fallback if API fails
+    updateStats();
+    document.getElementById("contactForm").reset();
+    editingId = null;
+  } catch (error) {
+    showAlert(error.message, "error");
+  }
+}
+
+      function editContact(id) {
+  const contact = data.contacts.find((c) => c._id === id || c.id === id); // Check both _id and id
+  if (contact) {
+    editingId = id;
+    document.getElementById("contactModalTitle").textContent = "Edit Contact";
+    document.getElementById("contactName").value = contact.name;
+    document.getElementById("contactEmail").value = contact.email;
+    document.getElementById("contactPhone").value = contact.phone || "";
+    document.getElementById("contactCompany").value = contact.company || "";
+    document.getElementById("contactNotes").value = contact.notes || "";
+    openModal("contactModal");
+  }
+}
+async function deleteContact(id) {
+  if (confirm("Are you sure you want to delete this contact?")) {
+    try {
+      try {
+        await apiCall(`/contacts/${id}`, { method: "DELETE" });
+      } catch (apiError) {
+        // Fallback to localStorage
+        data.contacts = data.contacts.filter(c => c._id !== id && c.id !== id);
+        saveToStorage();
+      }
+      await loadContacts().catch(() => renderContacts());
+      updateStats();
+    } catch (error) {
+      showAlert(error.message, "error");
+    }
+  }
+}
+      // Lead functions
+      function renderLeads() {
+        const tbody = document.getElementById("leadsTable");
+        const userLeads = data.leads.filter((l) => l.userId === currentUser.id);
+
+        tbody.innerHTML = userLeads
+          .map(
+            (lead) => `
+                <tr>
+                    <td>${lead.name}</td>
+                    <td>${lead.email}</td>
+                    <td>${lead.phone || "N/A"}</td>
+                    <td><span class="badge badge-${lead.status}">${lead.status
+              .replace("-", " ")
+              .toUpperCase()}</span></td>
+                    <td>${lead.source}</td>
+                    <td>
+                        <button class="btn btn-small btn-primary" onclick="editLead('${
+                          lead._id
+                        }')">Edit</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteLead('${
+                          lead._id
+                        }')">Delete</button>
+                    </td>
+                </tr>
+            `
+          )
+          .join("");
+      }
+async function handleLeadSubmit(e) {
+  e.preventDefault();
+
+  const leadData = {
+    name: document.getElementById('leadName').value,
+    email: document.getElementById('leadEmail').value,
+    phone: document.getElementById('leadPhone').value,
+    status: document.getElementById('leadStatus').value,
+    source: document.getElementById('leadSource').value,
+    notes: document.getElementById('leadNotes').value,
+    userId: currentUser.id,
+    id: editingId || generateId(),
+    _id: editingId || generateId()
+  };
+
+  try {
+    if (editingId) {
+      // Try API first, fallback to localStorage
+      try {
+        await apiCall(`/leads/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify(leadData),
+        });
+      } catch (apiError) {
+        // Fallback to localStorage
+        const index = data.leads.findIndex(l => (l._id === editingId || l.id === editingId));
+        if (index !== -1) {
+          data.leads[index] = { ...data.leads[index], ...leadData };
+          saveToStorage();
+        }
+      }
+    } else {
+      try {
+        const response = await apiCall('/leads', {
+          method: 'POST',
+          body: JSON.stringify(leadData),
+        });
+        leadData._id = response._id || leadData._id;
+      } catch (apiError) {
+        // Fallback to localStorage
+        data.leads.push(leadData);
+        saveToStorage();
+      }
+    }
+
+    closeModal('leadModal');
+    await loadLeads().catch(() => renderLeads()); // Fallback if API fails
+    updateStats();
+    document.getElementById('leadForm').reset();
+    editingId = null;
+  } catch (error) {
+    showAlert(error.message, 'error');
+  }
+}
+
+      function editLead(id) {
+  const lead = data.leads.find((l) => l._id === id || l.id === id); // Check both _id and id
+  if (lead) {
+    editingId = id;
+    document.getElementById("leadModalTitle").textContent = "Edit Lead";
+    document.getElementById("leadName").value = lead.name;
+    document.getElementById("leadEmail").value = lead.email;
+    document.getElementById("leadPhone").value = lead.phone || "";
+    document.getElementById("leadStatus").value = lead.status;
+    document.getElementById("leadSource").value = lead.source;
+    document.getElementById("leadNotes").value = lead.notes || "";
+    openModal("leadModal");
+  }
+}
+
+
+
+async function deleteLead(id) {
+  if (confirm("Are you sure you want to delete this lead?")) {
+    try {
+      try {
+        await apiCall(`/leads/${id}`, { method: "DELETE" });
+      } catch (apiError) {
+        // Fallback to localStorage
+        data.leads = data.leads.filter(l => l._id !== id && l.id !== id);
+        saveToStorage();
+      }
+      await loadLeads().catch(() => renderLeads());
+      updateStats();
+    } catch (error) {
+      showAlert(error.message, "error");
+    }
+  }
+}
+      // Sales functions
+      function renderSales() {
+        const tbody = document.getElementById("salesTable");
+        const userSales = data.sales.filter((s) => s.userId === currentUser.id);
+
+        tbody.innerHTML = userSales
+          .map(
+            (sale) => `
+                <tr>
+                    <td>${sale.customer}</td>
+                    <td>${parseFloat(sale.amount).toFixed(2)}</td>
+                    <td><span class="badge badge-${
+                      sale.status
+                    }">${sale.status.toUpperCase()}</span></td>
+                    <td>${new Date(sale.date).toLocaleDateString()}</td>
+                    <td>${sale.product}</td>
+                    <td>
+                        <button class="btn btn-small btn-primary" onclick="editSale('${
+                          sale._id
+                        }')">Edit</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteSale('${
+                          sale._id
+                        }')">Delete</button>
+                    </td>
+                </tr>
+            `
+          )
+          .join("");
+      }
+
+      async function handleSaleSubmit(e) {
+  e.preventDefault();
+
+  const saleData = {
+    customer: document.getElementById('saleCustomer').value,
+    amount: parseFloat(document.getElementById('saleAmount').value),
+    product: document.getElementById('saleProduct').value,
+    status: document.getElementById('saleStatus').value,
+    date: document.getElementById('saleDate').value,
+    notes: document.getElementById('saleNotes').value,
+    userId: currentUser.id,
+    id: editingId || generateId(),
+    _id: editingId || generateId()
+  };
+
+  try {
+    if (editingId) {
+      // Try API first, fallback to localStorage
+      try {
+        await apiCall(`/sales/${editingId}`, {
+          method: 'PUT',
+          body: JSON.stringify(saleData),
+        });
+      } catch (apiError) {
+        // Fallback to localStorage
+        const index = data.sales.findIndex(s => (s._id === editingId || s.id === editingId));
+        if (index !== -1) {
+          data.sales[index] = { ...data.sales[index], ...saleData };
+          saveToStorage();
+        }
+      }
+    } else {
+      try {
+        const response = await apiCall('/sales', {
+          method: 'POST',
+          body: JSON.stringify(saleData),
+        });
+        saleData._id = response._id || saleData._id;
+      } catch (apiError) {
+        // Fallback to localStorage
+        data.sales.push(saleData);
+        saveToStorage();
+      }
+    }
+
+    closeModal('saleModal');
+    await loadSales().catch(() => renderSales()); // Fallback if API fails
+    updateStats();
+    document.getElementById('saleForm').reset();
+    editingId = null;
+  } catch (error) {
+    showAlert(error.message, 'error');
+  }
+}
+
+
+      function editSale(id) {
+  const sale = data.sales.find((s) => s._id === id || s.id === id); // Check both _id and id
+  if (sale) {
+    editingId = id;
+    document.getElementById("saleModalTitle").textContent = "Edit Sale";
+    document.getElementById("saleCustomer").value = sale.customer;
+    document.getElementById("saleAmount").value = sale.amount;
+    document.getElementById("saleProduct").value = sale.product;
+    document.getElementById("saleStatus").value = sale.status;
+    document.getElementById("saleDate").value = sale.date;
+    document.getElementById("saleNotes").value = sale.notes || "";
+    openModal("saleModal");
+  }
+}
+
+
+async function deleteSale(id) {
+  if (confirm("Are you sure you want to delete this sale?")) {
+    try {
+      try {
+        await apiCall(`/sales/${id}`, { method: "DELETE" });
+      } catch (apiError) {
+        // Fallback to localStorage
+        data.sales = data.sales.filter(s => s._id !== id && s.id !== id);
+        saveToStorage();
+      }
+      await loadSales().catch(() => renderSales());
+      updateStats();
+    } catch (error) {
+      showAlert(error.message, "error");
+    }
+  }
+}
+
+
+      // Modal functions
+      function openModal(modalId) {
+        document.getElementById(modalId).style.display = "block";
+        // Reset form title for new entries
+        if (!editingId) {
+          if (modalId === "contactModal") {
+            document.getElementById("contactModalTitle").textContent =
+              "Add Contact";
+          } else if (modalId === "leadModal") {
+            document.getElementById("leadModalTitle").textContent = "Add Lead";
+          } else if (modalId === "saleModal") {
+            document.getElementById("saleModalTitle").textContent = "Add Sale";
+          }
+        }
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+        editingId = null;
+        // Reset forms
+        if (modalId === "contactModal") {
+          document.getElementById("contactForm").reset();
+        } else if (modalId === "leadModal") {
+          document.getElementById("leadForm").reset();
+        } else if (modalId === "saleModal") {
+          document.getElementById("saleForm").reset();
+        }
+      }
+
+      // Search and filter functions
+      function filterTable(type, searchTerm) {
+        const table = document.getElementById(`${type}Table`);
+        const rows = table.getElementsByTagName("tr");
+
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          const text = row.textContent.toLowerCase();
+
+          if (text.includes(searchTerm.toLowerCase())) {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        }
+      }
+
+      // Statistics functions
+      function updateStats() {
+  const userContacts = data.contacts.filter((c) => c.userId === currentUser.id);
+  const userLeads = data.leads.filter((l) => l.userId === currentUser.id);
+  const userSales = data.sales.filter((s) => s.userId === currentUser.id);
+
+  // Update counts
+  document.getElementById("contactsCount").textContent = userContacts.length;
+  document.getElementById("leadsCount").textContent = userLeads.length;
+  document.getElementById("salesCount").textContent = userSales.length;
+
+  // Calculate revenue - FIX: Add $ symbol
+  const totalRevenue = userSales
+    .filter((s) => s.status === "completed")
+    .reduce((sum, sale) => sum + parseFloat(sale.amount || 0), 0);
+
+  document.getElementById("salesRevenue").textContent = `$${totalRevenue.toFixed(2)}`;
+}
+      // Alert functions
+      function showAlert(message, type) {
+        const alertContainer = document.getElementById("alertContainer");
+        const alertClass = type === "error" ? "alert-error" : "alert-success";
+
+        alertContainer.innerHTML = `
+                <div class="alert ${alertClass}">
+                    ${message}
+                </div>
+            `;
+
+        // Auto-hide alert after 5 seconds
+        setTimeout(() => {
+          clearAlerts();
+        }, 5000);
+      }
+
+      function clearAlerts() {
+        document.getElementById("alertContainer").innerHTML = "";
+      }
+      // Utility functions
+      function generateId() {
+        return Date.now().toString(36) + Math.random().toString(36).substr(2);
+      }
+
+      // Set default date for sale form
+      document.addEventListener("DOMContentLoaded", function () {
+        setupEventListeners();
+        checkAuthStatus();
+
+        // Set default date for sale form
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("saleDate").value = today;
+      });
+    </script>
+
+    <style>
+      .badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+      }
+
+      .badge-new {
+        background: #e3f2fd;
+        color: #1976d2;
+      }
+      .badge-contacted {
+        background: #f3e5f5;
+        color: #7b1fa2;
+      }
+      .badge-qualified {
+        background: #e8f5e8;
+        color: #388e3c;
+      }
+      .badge-proposal {
+        background: #fff3e0;
+        color: #f57c00;
+      }
+      .badge-closed-won {
+        background: #e8f5e8;
+        color: #2e7d32;
+      }
+      .badge-closed-lost {
+        background: #ffebee;
+        color: #d32f2f;
+      }
+      .badge-pending {
+        background: #fff3e0;
+        color: #f57c00;
+      }
+      .badge-completed {
+        background: #e8f5e8;
+        color: #2e7d32;
+      }
+      .badge-cancelled {
+        background: #ffebee;
+        color: #d32f2f;
+      }
+      .badge-refunded {
+        background: #f3e5f5;
+        color: #7b1fa2;
+      }
+    </style>
+  </body>
+</html>
