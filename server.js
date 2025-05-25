@@ -1,8 +1,7 @@
 require('dotenv').config();
 const MONGO_URI = process.env.MONGODB_URI;
 
-console.log('🔍 Loaded MONGODB_URI:', MONGO_URI);
-
+// Import required security packages
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -12,27 +11,87 @@ const multer = require('multer');
 const csv = require('csv-parser');
 const { Parser } = require('json2csv');
 const bcrypt = require('bcrypt');
+const session = require('express-session');
+const csrf = require('csurf');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
 const app = express();
-const PORT = process.env.PORT || 3000; // ✅ Fixed: Use Render's PORT
+const PORT = process.env.PORT || 3000;
 
-mongoose.connect(MONGO_URI || 'mongodb://localhost:27017/bintech_crm')
-  .then(() => console.log('✅ MongoDB connected'))
-  .catch(err => {
-    console.error('❌ MongoDB connection error:', err);
-    process.exit(1);
-  });
+// MongoDB Connection with Connection Pooling
+mongoose.connect(MONGO_URI || 'mongodb://localhost:27017/bintech_crm', {
+  maxPoolSize: 10,
+  minPoolSize: 2,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+})
+.then(() => console.log('✅ MongoDB connected'))
+.catch(err => {
+  console.error('❌ MongoDB connection error:', err);
+  process.exit(1);
+});
 
-// ✅ MIDDLEWARE FIRST - SINGLE CORS CONFIGURATION
+// Security Headers
+app.use(helmet());
+
+// CORS Configuration
 app.use(cors({
-  origin: 'https://bintech-crm.onrender.com',
+  origin: process.env.FRONTEND_URL || 'https://bintech-crm.onrender.com',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'CSRF-Token']
 }));
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.'
+});
+app.use('/api/', limiter);
+
+// Login Rate Limiting
+const loginLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour window
+  max: 5, // start blocking after 5 requests
+  message: 'Too many login attempts from this IP, please try again after an hour'
+});
+app.use('/api/login', loginLimiter);
+
+// Body Parser
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// Data Sanitization
+app.use(mongoSanitize()); // Against NoSQL Injection
+app.use(xss()); // Against XSS
+app.use(hpp()); // Against HTTP Parameter Pollution
+
+// Session Configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'super-secret-key-change-in-production',
+  name: 'sessionId',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// CSRF Protection
+app.use(csrf());
+app.get('/api/csrf-token', (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
+
+// Static Files
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ✅ DEALS ROUTES (using external file)
@@ -46,36 +105,209 @@ const Lead = require('./models/leads');
 const Contact = require('./models/contacts');
 const User = require('./models/users');
 
-/* ---------- LOGIN ROUTE - ADDED! ---------- */
+// Authentication Routes
+const authMiddleware = require('./middleware/auth');
+
+// Password Reset Request
+app.post('/api/reset-password-request', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        code: 'USER_NOT_FOUND',
+        message: 'No account found with this email address'
+      });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = resetTokenExpiry;
+    await user.save();
+
+    // TODO: Send reset email
+    // For now, just return the token (in production, send via email)
+    res.json({
+      success: true,
+      message: 'Password reset instructions sent',
+      debug: { resetToken } // Remove in production
+    });
+  } catch (err) {
+    console.error('Password reset request error:', err);
+    res.status(500).json({
+      success: false,
+      code: 'SERVER_ERROR',
+      message: 'Failed to process password reset request'
+    });
+  }
+});
+
+// Reset Password
+app.post('/api/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    
+    const user = await User.findOne({
+      resetToken: token,
+      resetTokenExpiry: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        code: 'INVALID_TOKEN',
+        message: 'Invalid or expired reset token'
+      });
+    }
+
+    // Validate password strength
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        code: 'WEAK_PASSWORD',
+        message: 'Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character'
+      });
+    }
+
+    // Update password
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    user.passwordHash = passwordHash;
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password has been reset successfully'
+    });
+  } catch (err) {
+    console.error('Password reset error:', err);
+    res.status(500).json({
+      success: false,
+      code: 'SERVER_ERROR',
+      message: 'Failed to reset password'
+    });
+  }
+});
+
+// Login Route with Enhanced Security
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     
-    console.log('🔐 Login attempt for:', username);
-    
-    // Find user
-    const user = await User.findOne({ username });
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    // Input validation
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        code: 'MISSING_CREDENTIALS',
+        message: 'Username and password are required'
+      });
     }
-    
+
+    // Find user
+    const user = await User.findOne({ username }).select('+passwordHash +loginAttempts +lockUntil');
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        code: 'INVALID_CREDENTIALS',
+        message: 'Invalid credentials'
+      });
+    }
+
+    // Check account lock
+    if (user.lockUntil && user.lockUntil > Date.now()) {
+      return res.status(423).json({
+        success: false,
+        code: 'ACCOUNT_LOCKED',
+        message: 'Account is temporarily locked. Please try again later'
+      });
+    }
+
     // Verify password
     const isValid = await bcrypt.compare(password, user.passwordHash);
+    
     if (!isValid) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+      // Increment login attempts
+      user.loginAttempts = (user.loginAttempts || 0) + 1;
+      
+      if (user.loginAttempts >= 5) {
+        user.lockUntil = Date.now() + 3600000; // Lock for 1 hour
+        await user.save();
+        
+        return res.status(423).json({
+          success: false,
+          code: 'ACCOUNT_LOCKED',
+          message: 'Too many failed attempts. Account locked for 1 hour'
+        });
+      }
+      
+      await user.save();
+      return res.status(401).json({
+        success: false,
+        code: 'INVALID_CREDENTIALS',
+        message: 'Invalid credentials'
+      });
     }
-    
-    console.log('✅ Login successful for:', username);
-    res.json({ 
-      success: true, 
-      message: 'Login successful',
-      user: { username: user.username, email: user.email }
+
+    // Reset login attempts on successful login
+    user.loginAttempts = 0;
+    user.lockUntil = null;
+    await user.save();
+
+    // Generate session
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Session regeneration error:', err);
+        return res.status(500).json({
+          success: false,
+          code: 'SESSION_ERROR',
+          message: 'Failed to create session'
+        });
+      }
+
+      req.session.userId = user._id;
+      req.session.username = user.username;
+
+      res.json({
+        success: true,
+        code: 'LOGIN_SUCCESS',
+        message: 'Login successful',
+        user: {
+          username: user.username,
+          email: user.email
+        }
+      });
     });
-    
   } catch (err) {
-    console.error('❌ Login error:', err);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Login error:', err);
+    res.status(500).json({
+      success: false,
+      code: 'SERVER_ERROR',
+      message: 'An unexpected error occurred'
+    });
   }
+});
+
+// Logout Route
+app.post('/api/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        code: 'LOGOUT_ERROR',
+        message: 'Failed to logout'
+      });
+    }
+    res.json({
+      success: true,
+      code: 'LOGOUT_SUCCESS',
+      message: 'Logged out successfully'
+    });
+  });
 });
 
 /* ---------- CONTACTS ---------- */
