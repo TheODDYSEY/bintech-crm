@@ -14,7 +14,7 @@ const { Parser } = require('json2csv');
 const bcrypt = require('bcrypt');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // ✅ Fixed: Use Render's PORT
 
 mongoose.connect(MONGO_URI || 'mongodb://localhost:27017/bintech_crm')
   .then(() => console.log('✅ MongoDB connected'))
@@ -23,14 +23,12 @@ mongoose.connect(MONGO_URI || 'mongodb://localhost:27017/bintech_crm')
     process.exit(1);
   });
 
-// ✅ MIDDLEWARE FIRST - BEFORE ANY ROUTES
-const cors = require('cors');
-
+// ✅ MIDDLEWARE FIRST - SINGLE CORS CONFIGURATION
 app.use(cors({
-  origin: 'https://bintech-crm.onrender.com', // ✅ Frontend origin
-  credentials: true,                          // ✅ If you're using cookies/session
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // ✅ Support all needed methods
-  allowedHeaders: ['Content-Type', 'Authorization']     // ✅ Allow custom headers
+  origin: 'https://bintech-crm.onrender.com',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
@@ -47,6 +45,38 @@ const upload = multer({ dest: 'uploads/' });
 const Lead = require('./models/leads');
 const Contact = require('./models/contacts');
 const User = require('./models/users');
+
+/* ---------- LOGIN ROUTE - ADDED! ---------- */
+app.post('/api/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    console.log('🔐 Login attempt for:', username);
+    
+    // Find user
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+    
+    // Verify password
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
+    
+    console.log('✅ Login successful for:', username);
+    res.json({ 
+      success: true, 
+      message: 'Login successful',
+      user: { username: user.username, email: user.email }
+    });
+    
+  } catch (err) {
+    console.error('❌ Login error:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 /* ---------- CONTACTS ---------- */
 app.get('/api/contacts', async (req, res) => {
@@ -200,7 +230,6 @@ app.get("/api/seed-user", async (req, res) => {
   }
 });
 
-
 /* ---------- REDIRECT ROOT ---------- */
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -208,5 +237,5 @@ app.get('/', (req, res) => {
 
 /* ---------- SERVER ---------- */
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
