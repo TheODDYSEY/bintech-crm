@@ -3,6 +3,10 @@
 
 A full-stack Customer Relationship Management (CRM) system built with Node.js, Express, MongoDB, and a modern web interface.
 
+<!-- add video here -->
+[watch setup_video.mp4](./setup_video.mp4)
+
+
 ## Features
 
 - **User Authentication**
